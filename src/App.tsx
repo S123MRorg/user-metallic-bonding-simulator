@@ -251,6 +251,11 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="border-t border-slate-800 bg-slate-900/50 py-4 text-center">
+        <p className="text-sm text-slate-500">author: Kirk</p>
+      </footer>
     </div>
   );
 }
