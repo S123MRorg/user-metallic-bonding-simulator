@@ -374,7 +374,7 @@ export default function App() {
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Controls Sidebar */}
-        <div className={`lg:col-span-4 space-y-6 ${showAdvanced ? 'max-h-[80vh] overflow-y-auto overflow-visible' : ''}`}>
+        <div className={`lg:col-span-4 space-y-6 ${showAdvanced ? 'max-h-[80vh] overflow-y-auto' : ''}`}>
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
             <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Simulation Mode</h2>
             <div className="space-y-3">
