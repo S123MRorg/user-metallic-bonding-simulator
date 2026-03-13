@@ -502,25 +502,23 @@ export default function App() {
 
           {/* Advanced Features Dropdown */}
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
-            <div className="p-6 pb-4">
-              <button
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between hover:bg-slate-800/30 transition-colors rounded-lg"
-              >
-                <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Advanced Features
-                </h2>
-                {showAdvanced ? (
-                  <ChevronUp className="w-5 h-5 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-slate-400" />
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between p-6 hover:bg-slate-800/30 transition-colors"
+            >
+              <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Advanced Features
+              </h2>
+              {showAdvanced ? (
+                <ChevronUp className="w-5 h-5 text-slate-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-slate-400" />
+              )}
+            </button>
             
             {showAdvanced && (
-              <div className="space-y-4">
+              <div className="px-6 pb-6 space-y-4">
                 {/* Animation Speed */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
