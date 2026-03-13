@@ -372,9 +372,10 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Controls Sidebar */}
-        <div className="lg:col-span-4 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Controls Sidebar - Fixed on desktop */}
+          <div className="lg:w-80 lg:flex-shrink-0 space-y-6 lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto">
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
             <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Simulation Mode</h2>
             <div className="space-y-3">
@@ -755,7 +756,7 @@ export default function App() {
         </div>
 
         {/* Main Canvas Area */}
-        <div className="lg:col-span-8 flex flex-col">
+        <div className="lg:flex-1 flex flex-col">
           <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-2 sm:p-6 flex-grow flex flex-col items-center justify-center relative overflow-hidden">
             <MetalSimulation 
               mode={mode} 
@@ -814,6 +815,7 @@ export default function App() {
               {mode === 'heat' && "Heating a metal causes its cations to vibrate with increasing intensity. This added kinetic energy spreads through the crystal lattice through coordinated vibrations and is also carried across the metal by the rapidly moving delocalized electrons, enabling efficient thermal conduction."}
             </p>
           </div>
+        </div>
         </div>
       </main>
 
