@@ -722,7 +722,7 @@ export default function MetalSimulation({
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [mode, isRecording, animationSpeed, autoMalleable, onRecordingComplete, onRecordingProgress]);
+  }, [mode, isRecording, animationSpeed, autoMalleable, singleLayerMode, onRecordingComplete, onRecordingProgress, onLayerSlide]);
 
   // Mouse Interaction for Malleable Mode
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -767,12 +767,14 @@ export default function MetalSimulation({
         // Single layer mode: only move the exact row that was clicked
         if (c.row === dragState.current.dragRow) {
           c.baseX += dx;
+          c.targetX += dx;
         }
       } else {
         // Multi-layer mode (scientific): move the clicked row and all rows above it
         // This represents how shear stress causes planes to slide together in real metals
         if (c.row <= dragState.current.dragRow) {
           c.baseX += dx;
+          c.targetX += dx;
         }
       }
     });

@@ -374,7 +374,7 @@ export default function App() {
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Controls Sidebar */}
-        <div className={`lg:col-span-4 space-y-6 ${showAdvanced ? 'max-h-[80vh] overflow-y-auto' : ''}`}>
+        <div className="lg:col-span-4 space-y-6">
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
             <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Simulation Mode</h2>
             <div className="space-y-3">
@@ -432,7 +432,7 @@ export default function App() {
                       <span className="text-sm text-slate-300">Single Layer Mode</span>
                       <div className="group relative">
                         <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                        <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                           When enabled, only the dragged layer moves. When disabled (scientific), layers above move together.
                         </div>
                       </div>
@@ -501,7 +501,7 @@ export default function App() {
           </div>
 
           {/* Advanced Features Dropdown */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-visible transition-all duration-300">
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="w-full flex items-center justify-between p-6 hover:bg-slate-800/30 transition-colors"
@@ -526,7 +526,7 @@ export default function App() {
                       <span className="text-sm text-slate-300">Animation Speed</span>
                       <div className="group relative">
                         <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                        <div className="absolute left-0 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                           Controls how fast delocalized electrons move. In real metals, electrons move at ~1,000,000 m/s (Fermi velocity), represented by 10x speed.
                         </div>
                       </div>
@@ -555,7 +555,7 @@ export default function App() {
                       <span className="text-sm text-slate-300">Temperature</span>
                       <div className="group relative">
                         <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                        <div className="absolute left-0 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                           Higher temperature increases cation vibration amplitude and electron kinetic energy. This demonstrates thermal expansion and heat conduction.
                         </div>
                       </div>
@@ -582,7 +582,7 @@ export default function App() {
                         <span className="text-sm text-slate-300">Voltage</span>
                         <div className="group relative">
                           <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                          <div className="absolute left-0 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                             Voltage creates an electric field that applies force on electrons, causing them to drift toward the positive terminal. Higher voltage = stronger force = faster electron flow.
                           </div>
                         </div>
@@ -608,7 +608,7 @@ export default function App() {
                     <span className="text-sm text-slate-300">Particle Spawner</span>
                     <div className="group relative">
                       <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                      <div className="absolute left-0 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Enable this and click anywhere on the metal to add more delocalized electrons. Great for exploring electron density effects!
                       </div>
                     </div>
@@ -637,7 +637,7 @@ export default function App() {
                     <span className="text-sm text-slate-300">Electron Trails</span>
                     <div className="group relative">
                       <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                      <div className="absolute left-0 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Visualize the paths electrons take as they move through the metal. Shows the random walk motion characteristic of thermal motion.
                       </div>
                     </div>
@@ -666,7 +666,7 @@ export default function App() {
                     <span className="text-sm text-slate-300">Crystal Structure</span>
                     <div className="group relative">
                       <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                      <div className="absolute left-0 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Square: Simple cubic arrangement | Hexagonal: Close-packed like magnesium | FCC: Face-centered cubic like copper - densest packing!
                       </div>
                     </div>
@@ -698,7 +698,7 @@ export default function App() {
                     <span className="text-sm text-slate-300">Alloy Mix</span>
                     <div className="group relative">
                       <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                      <div className="absolute left-0 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Mix in Metal B atoms (gold) to create an alloy. Alloys have different properties than pure metals - they often have different strength, conductivity, and color!
                       </div>
                     </div>
