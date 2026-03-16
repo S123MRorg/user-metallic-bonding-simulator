@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MetalSimulation, { SimulationMode } from './components/MetalSimulation';
-import { Info, Zap, Flame, Move, Play, X, Hexagon, Download, Loader2, Trophy, Target, ChevronDown, ChevronUp, Thermometer, Zap as VoltageIcon, Plus, Eye, Sparkles, Layers, Settings, Check, Clock, Lightbulb, MousePointer, Flame as HeatIcon, Grid3X3, Gem, Star, HelpCircle } from 'lucide-react';
+import { 
+  Info, Zap, Flame, Move, Play, X, Hexagon, Download, Loader2, Trophy, Target, 
+  ChevronDown, ChevronUp, Thermometer, Zap as VoltageIcon, Plus, Eye, Sparkles, 
+  Layers, Settings, Check, Clock, Lightbulb, MousePointer, Flame as HeatIcon, 
+  Grid3X3, Gem, Star, HelpCircle, Wand2, Wrench, Sparkle, Award, Medal, Crown, 
+  Flag, PartyPopper, BookOpen, TrendingUp
+} from 'lucide-react';
 
 // Types
 interface Achievement {
@@ -44,6 +50,20 @@ const defaultAchievements: Achievement[] = [
   { id: 'crystal_gazer', name: 'Crystal Gazer', description: 'View all crystal structures', icon: '💎', unlocked: false },
   { id: 'trail_blazer', name: 'Trail Blazer', description: 'Enable electron trails', icon: '✨', unlocked: false },
 ];
+
+// Achievement icon mapping - using Lucide icons for professional look
+const achievementIcons: Record<string, React.ReactNode> = {
+  '⭐': <Star className="w-6 h-6 text-amber-400" />,
+  '💡': <Lightbulb className="w-6 h-6 text-amber-400" />,
+  '🔥': <Flame className="w-6 h-6 text-orange-500" />,
+  '⚡': <Zap className="w-6 h-6 text-yellow-500" />,
+  '🧙': <Wand2 className="w-6 h-6 text-purple-400" />,
+  '➕': <Plus className="w-6 h-6 text-blue-400" />,
+  '🔧': <Wrench className="w-6 h-6 text-slate-400" />,
+  '💎': <Gem className="w-6 h-6 text-cyan-400" />,
+  '✨': <Sparkle className="w-6 h-6 text-pink-400" />,
+  '🎯': <Target className="w-6 h-6 text-emerald-400" />,
+};
 
 // Quiz questions
 const quizQuestions: QuizQuestion[] = [
@@ -305,12 +325,14 @@ export default function App() {
   const unlockedCount = achievements.filter(a => a.unlocked).length;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans selection:bg-blue-500/30">
-      {/* Achievement Popup */}
+    <div className="min-h-screen bg-emerald-950 text-slate-100 font-sans selection:bg-emerald-500/30">
+      {/* Achievement Popup - uses Lucide icons instead of emojis */}
       {newAchievement && (
         <div className="fixed top-20 right-4 z-50 animate-bounce">
           <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-900 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
-            <span className="text-2xl">{newAchievement.icon}</span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              {achievementIcons[newAchievement.icon] || <Star className="w-6 h-6 text-amber-900" />}
+            </div>
             <div>
               <div className="font-bold">Achievement Unlocked!</div>
               <div className="text-sm font-medium">{newAchievement.name}</div>
@@ -319,22 +341,22 @@ export default function App() {
         </div>
       )}
 
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-10">
+      <header className="border-b border-emerald-900/50 bg-emerald-950/50 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center shadow-lg shadow-slate-500/20 border border-slate-500">
-              <Hexagon className="w-5 h-5 text-slate-200" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-500">
+              <Hexagon className="w-5 h-5 text-emerald-200" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">Metallic Bonding Simulator</h1>
-              <p className="text-xs text-slate-400 font-medium">Interactive Model of Cations & Delocalized Electrons</p>
+              <h1 className="text-xl font-semibold tracking-tight text-emerald-50">Metallic Bonding Simulator</h1>
+              <p className="text-xs text-emerald-300/70 font-medium">Interactive Model of Cations & Delocalized Electrons</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Achievement Button */}
             <button
               onClick={() => setShowAchievements(true)}
-              className="relative flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm font-medium border border-slate-700"
+              className="relative flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-900/50 hover:bg-emerald-800/50 transition-colors text-sm font-medium border border-emerald-800"
             >
               <Trophy className="w-4 h-4 text-amber-400" />
               <span className="hidden sm:inline">{unlockedCount}/{achievements.length}</span>
@@ -342,7 +364,7 @@ export default function App() {
             {/* Challenge Button */}
             <button
               onClick={() => setShowChallenges(true)}
-              className="relative flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm font-medium border border-slate-700"
+              className="relative flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-900/50 hover:bg-emerald-800/50 transition-colors text-sm font-medium border border-emerald-800"
             >
               <Target className="w-4 h-4 text-emerald-400" />
               <span className="hidden sm:inline">Challenges</span>
@@ -355,7 +377,7 @@ export default function App() {
             {/* Quiz Button */}
             <button
               onClick={() => setShowQuiz(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm font-medium border border-slate-700"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-900/50 hover:bg-emerald-800/50 transition-colors text-sm font-medium border border-emerald-800"
             >
               <Star className="w-4 h-4 text-purple-400" />
               <span className="hidden sm:inline">Quiz</span>
@@ -363,9 +385,9 @@ export default function App() {
             {/* DIY Button */}
             <button
               onClick={() => setShowDiy(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm font-medium border border-slate-700"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-900/50 hover:bg-emerald-800/50 transition-colors text-sm font-medium border border-emerald-800"
             >
-              <Info className="w-4 h-4" />
+              <Info className="w-4 h-4 text-emerald-400" />
               <span className="hidden sm:inline">DIY Model</span>
             </button>
           </div>
@@ -376,15 +398,15 @@ export default function App() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Controls Sidebar - Fixed on desktop */}
           <div className="lg:w-80 lg:flex-shrink-0 space-y-6 lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto">
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Simulation Mode</h2>
+          <div className="bg-emerald-900/20 border border-emerald-800/50 rounded-2xl p-6">
+            <h2 className="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-4">Simulation Mode</h2>
             <div className="space-y-3">
               <button
                 onClick={() => setMode('normal')}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all ${
                   mode === 'normal' 
-                    ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' 
-                    : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300'
+                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' 
+                    : 'bg-emerald-900/30 border-emerald-800/50 hover:bg-emerald-800/50 text-slate-300'
                 } border`}
               >
                 <Play className="w-5 h-5" />
@@ -399,7 +421,7 @@ export default function App() {
                 className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all ${
                   mode === 'malleable' 
                     ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' 
-                    : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300'
+                    : 'bg-emerald-900/30 border-emerald-800/50 hover:bg-emerald-800/50 text-slate-300'
                 } border`}
               >
                 <Move className="w-5 h-5" />
@@ -411,12 +433,12 @@ export default function App() {
 
               {mode === 'malleable' && (
                 <div className="space-y-2">
-                  <div className="pl-4 pr-2 py-2 flex items-center justify-between bg-slate-800/30 rounded-lg border border-slate-700/30">
+                  <div className="pl-4 pr-2 py-2 flex items-center justify-between bg-emerald-900/20 rounded-lg border border-emerald-800/30">
                     <span className="text-sm text-slate-300">Auto-demonstrate</span>
                     <button
                       onClick={() => setAutoMalleable(!autoMalleable)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        autoMalleable ? 'bg-emerald-500' : 'bg-slate-600'
+                        autoMalleable ? 'bg-emerald-500' : 'bg-emerald-800'
                       }`}
                     >
                       <span
@@ -428,12 +450,12 @@ export default function App() {
                   </div>
                   
                   {/* Single Layer Mode Toggle */}
-                  <div className="pl-4 pr-2 py-2 flex items-center justify-between bg-slate-800/30 rounded-lg border border-slate-700/30">
+                  <div className="pl-4 pr-2 py-2 flex items-center justify-between bg-emerald-900/20 rounded-lg border border-emerald-800/30">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-slate-300">Single Layer Mode</span>
                       <div className="group relative">
                         <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-emerald-800 text-xs text-emerald-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                           When enabled, only the dragged layer moves. When disabled (scientific), layers above move together.
                         </div>
                       </div>
@@ -441,7 +463,7 @@ export default function App() {
                     <button
                       onClick={() => setSingleLayerMode(!singleLayerMode)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        singleLayerMode ? 'bg-blue-500' : 'bg-slate-600'
+                        singleLayerMode ? 'bg-emerald-500' : 'bg-emerald-800'
                       }`}
                     >
                       <span
@@ -458,8 +480,8 @@ export default function App() {
                 onClick={() => setMode('electrical')}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all ${
                   mode === 'electrical' 
-                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-400' 
-                    : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300'
+                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' 
+                    : 'bg-emerald-900/30 border-emerald-800/50 hover:bg-emerald-800/50 text-slate-300'
                 } border`}
               >
                 <Zap className="w-5 h-5" />
@@ -473,8 +495,8 @@ export default function App() {
                 onClick={() => setMode('circuit')}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all ${
                   mode === 'circuit' 
-                    ? 'bg-purple-500/10 border-purple-500/50 text-purple-400' 
-                    : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300'
+                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' 
+                    : 'bg-emerald-900/30 border-emerald-800/50 hover:bg-emerald-800/50 text-slate-300'
                 } border`}
               >
                 <Zap className="w-5 h-5" />
@@ -488,8 +510,8 @@ export default function App() {
                 onClick={() => setMode('heat')}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all ${
                   mode === 'heat' 
-                    ? 'bg-rose-500/10 border-rose-500/50 text-rose-400' 
-                    : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300'
+                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' 
+                    : 'bg-emerald-900/30 border-emerald-800/50 hover:bg-emerald-800/50 text-slate-300'
                 } border`}
               >
                 <Flame className="w-5 h-5" />
@@ -524,15 +546,15 @@ export default function App() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-300">Animation Speed</span>
+                      <span className="text-sm text-emerald-300">Animation Speed</span>
                       <div className="group relative">
-                        <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <HelpCircle className="w-4 h-4 text-emerald-600 cursor-help" />
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-emerald-900 text-xs text-emerald-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                           Controls how fast delocalized electrons move. In real metals, electrons move at ~1,000,000 m/s (Fermi velocity), represented by 10x speed.
                         </div>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-400">{animationSpeed.toFixed(2)}x</span>
+                    <span className="text-xs text-emerald-400/70">{animationSpeed.toFixed(2)}x</span>
                   </div>
                   <input 
                     type="range" 
@@ -541,9 +563,9 @@ export default function App() {
                     step="0.01"
                     value={animationSpeed} 
                     onChange={(e) => setAnimationSpeed(Number(e.target.value))}
-                    className="w-full accent-blue-500"
+                    className="w-full accent-emerald-500"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-emerald-500/50 mt-1">
                     Real life: ~1,000,000 m/s (10x)
                   </p>
                 </div>
@@ -552,16 +574,16 @@ export default function App() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Thermometer className="w-4 h-4 text-rose-400" />
-                      <span className="text-sm text-slate-300">Temperature</span>
+                      <Thermometer className="w-4 h-4 text-orange-400" />
+                      <span className="text-sm text-emerald-300">Temperature</span>
                       <div className="group relative">
-                        <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <HelpCircle className="w-4 h-4 text-emerald-600 cursor-help" />
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-emerald-900 text-xs text-emerald-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                           Higher temperature increases cation vibration amplitude and electron kinetic energy. This demonstrates thermal expansion and heat conduction.
                         </div>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-400">{temperature}°C</span>
+                    <span className="text-xs text-emerald-400/70">{temperature}°C</span>
                   </div>
                   <input 
                     type="range" 
@@ -570,7 +592,7 @@ export default function App() {
                     step="1"
                     value={temperature} 
                     onChange={(e) => setTemperature(Number(e.target.value))}
-                    className="w-full accent-rose-500"
+                    className="w-full accent-orange-500"
                   />
                 </div>
 
@@ -579,16 +601,16 @@ export default function App() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <VoltageIcon className="w-4 h-4 text-amber-400" />
-                        <span className="text-sm text-slate-300">Voltage</span>
+                        <VoltageIcon className="w-4 h-4 text-cyan-400" />
+                        <span className="text-sm text-emerald-300">Voltage</span>
                         <div className="group relative">
-                          <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                          <HelpCircle className="w-4 h-4 text-emerald-600 cursor-help" />
+                          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-emerald-900 text-xs text-emerald-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                             Voltage creates an electric field that applies force on electrons, causing them to drift toward the positive terminal. Higher voltage = stronger force = faster electron flow.
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs text-slate-400">{voltage}V</span>
+                      <span className="text-xs text-emerald-400/70">{voltage}V</span>
                     </div>
                     <input 
                       type="range" 
@@ -620,7 +642,7 @@ export default function App() {
                       trackFeature('particle_spawn');
                     }}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      particleSpawner ? 'bg-blue-500' : 'bg-slate-600'
+                      particleSpawner ? 'bg-emerald-500' : 'bg-emerald-900'
                     }`}
                   >
                     <span
@@ -632,13 +654,13 @@ export default function App() {
                 </div>
 
                 {/* Electron Trails */}
-                <div className="flex items-center justify-between py-2 border-t border-slate-700/50">
+                <div className="flex items-center justify-between py-2 border-t border-emerald-800/50">
                   <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm text-slate-300">Electron Trails</span>
+                    <Eye className="w-4 h-4 text-cyan-400" />
+                    <span className="text-sm text-emerald-300">Electron Trails</span>
                     <div className="group relative">
-                      <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <HelpCircle className="w-4 h-4 text-emerald-600 cursor-help" />
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-emerald-900 text-xs text-emerald-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Visualize the paths electrons take as they move through the metal. Shows the random walk motion characteristic of thermal motion.
                       </div>
                     </div>
@@ -649,7 +671,7 @@ export default function App() {
                       if (!showTrails) trackFeature('trail_enable');
                     }}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      showTrails ? 'bg-purple-500' : 'bg-slate-600'
+                      showTrails ? 'bg-cyan-500' : 'bg-emerald-900'
                     }`}
                   >
                     <span
@@ -661,13 +683,13 @@ export default function App() {
                 </div>
 
                 {/* Crystal Structure */}
-                <div className="py-2 border-t border-slate-700/50">
+                <div className="py-2 border-t border-emerald-800/50">
                   <div className="flex items-center gap-2 mb-2">
-                    <Grid3X3 className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm text-slate-300">Crystal Structure</span>
+                    <Grid3X3 className="w-4 h-4 text-teal-400" />
+                    <span className="text-sm text-emerald-300">Crystal Structure</span>
                     <div className="group relative">
-                      <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <HelpCircle className="w-4 h-4 text-emerald-600 cursor-help" />
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-emerald-900 text-xs text-emerald-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Square: Simple cubic arrangement | Hexagonal: Close-packed like magnesium | FCC: Face-centered cubic like copper - densest packing!
                       </div>
                     </div>
@@ -683,7 +705,7 @@ export default function App() {
                         className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
                           crystalStructure === structure
                             ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                            : 'bg-emerald-900/30 border-emerald-800/50 text-emerald-400/70 hover:bg-emerald-800/50'
                         } border`}
                       >
                         {structure === 'fcc' ? 'FCC' : structure.charAt(0).toUpperCase() + structure.slice(1)}
@@ -693,13 +715,13 @@ export default function App() {
                 </div>
 
                 {/* Alloy Creation */}
-                <div className="py-2 border-t border-slate-700/50">
+                <div className="py-2 border-t border-emerald-800/50">
                   <div className="flex items-center gap-2 mb-2">
-                    <Gem className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm text-slate-300">Alloy Mix</span>
+                    <Gem className="w-4 h-4 text-yellow-400" />
+                    <span className="text-sm text-emerald-300">Alloy Mix</span>
                     <div className="group relative">
-                      <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-slate-700 text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <HelpCircle className="w-4 h-4 text-emerald-600 cursor-help" />
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-emerald-900 text-xs text-emerald-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Mix in Metal B atoms (gold) to create an alloy. Alloys have different properties than pure metals - they often have different strength, conductivity, and color!
                       </div>
                     </div>
@@ -714,9 +736,9 @@ export default function App() {
                       setAlloyMix(Number(e.target.value));
                       if (Number(e.target.value) > 0) trackFeature('alloy_create');
                     }}
-                    className="w-full accent-amber-500"
+                    className="w-full accent-yellow-500"
                   />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                  <div className="flex justify-between text-xs text-emerald-400/70 mt-1">
                     <span>Pure Metal A</span>
                     <span>{alloyMix}% Metal B</span>
                   </div>
@@ -727,12 +749,12 @@ export default function App() {
 
           {/* Secret Mode: Export Section */}
           {secretModeEnabled && (
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-              <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Export</h2>
+            <div className="bg-emerald-900/20 border border-emerald-800/50 rounded-2xl p-6">
+              <h2 className="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-4">Export</h2>
               <button
                 onClick={() => setIsRecording(true)}
                 disabled={isRecording}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400 transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 disabled:text-emerald-500 transition-colors font-medium"
               >
                 {isRecording ? (
                   <>
@@ -782,32 +804,32 @@ export default function App() {
                 <div className="w-4 h-4 rounded-full bg-red-500 border border-red-700 flex items-center justify-center">
                   <span className="text-[8px] font-bold text-white">+</span>
                 </div>
-                <span className="text-slate-300">Metal A Cation</span>
+                <span className="text-emerald-300">Metal A Cation</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-amber-500 border border-amber-700 flex items-center justify-center">
                   <span className="text-[8px] font-bold text-white">+</span>
                 </div>
-                <span className="text-slate-300">Metal B (Alloy)</span>
+                <span className="text-emerald-300">Metal B (Alloy)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-400 flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-cyan-400 flex items-center justify-center">
                   <span className="text-[8px] font-bold text-white">-</span>
                 </div>
-                <span className="text-slate-300">Delocalized Electron</span>
+                <span className="text-emerald-300">Delocalized Electron</span>
               </div>
             </div>
           </div>
           
-          <div className="mt-6 bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
-            <h3 className="text-lg font-medium text-white mb-2">
+          <div className="mt-6 bg-emerald-900/20 border border-emerald-800/50 rounded-2xl p-6">
+            <h3 className="text-lg font-medium text-emerald-50 mb-2">
               {mode === 'normal' && "The 'Sea of Electrons' Model"}
               {mode === 'malleable' && "Malleability & Ductility"}
               {mode === 'electrical' && "Electrical Conductivity"}
               {mode === 'circuit' && "Complete Circuit Animation"}
               {mode === 'heat' && "Thermal Conductivity"}
             </h3>
-            <p className="text-slate-400 leading-relaxed">
+            <p className="text-emerald-300/70 leading-relaxed">
               {mode === 'normal' && "A metal is composed of an extensive three-dimensional arrangement of positively charged ions (cations) immersed in a 'sea' of delocalized electrons. These mobile electrons can flow freely throughout the entire metallic structure, which explains why metals exhibit their characteristic physical properties."}
               {mode === 'malleable' && "The delocalized electrons function as a dynamic, flexible binding agent within the metal. When an external force is applied—such as dragging a layer of cations—the atomic layers can shift relative to one another without disrupting the metallic bonds. This sliding mechanism underlies the malleability of metals (ability to be flattened into sheets) and ductility (capacity to be stretched into wires)."}
               {mode === 'electrical' && "Applying an electrical potential difference across a metal causes the delocalized electrons to drift systematically toward the positive terminal. This directed movement of electric charge constitutes an electric current. The unrestricted mobility of electrons within the metallic lattice makes metals highly efficient conductors of electricity."}
@@ -821,16 +843,16 @@ export default function App() {
 
       {/* Quiz Modal */}
       {showQuiz && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-sm">
+          <div className="bg-emerald-950 border border-emerald-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-emerald-950/90 backdrop-blur-md border-b border-emerald-900 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-emerald-50 flex items-center gap-2">
                 <Star className="w-5 h-5 text-purple-400" />
                 Quiz: Metallic Bonding
               </h2>
               <button 
                 onClick={() => setShowQuiz(false)}
-                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-lg hover:bg-emerald-900 text-emerald-400 hover:text-emerald-200 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -838,17 +860,19 @@ export default function App() {
             
             {showQuizResult ? (
               <div className="p-6 text-center">
-                <div className="text-6xl mb-4">🎉</div>
+                <div className="flex justify-center mb-4">
+                  <Trophy className="w-16 h-16 text-amber-400" />
+                </div>
                 <h3 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h3>
-                <p className="text-slate-400 mb-4">
+                <p className="text-emerald-300 mb-4">
                   You scored <span className="text-emerald-400 font-bold">{quizScore}</span> out of <span className="font-bold">{quizQuestions.length}</span>
                 </p>
-                <p className="text-slate-500 mb-6">
+                <p className="text-slate-400 mb-6">
                   {quizScore === quizQuestions.length 
-                    ? "Perfect score! You're a metallic bonding expert! 🧙‍♂️"
+                    ? "Perfect score! You're a metallic bonding expert!"
                     : quizScore >= quizQuestions.length * 0.7 
-                    ? "Great job! You know your stuff! 💪"
-                    : "Keep learning! Practice makes perfect! 📚"}
+                    ? "Great job! You know your stuff!"
+                    : "Keep learning! Practice makes perfect!"}
                 </p>
                 <button
                   onClick={handleRestartQuiz}
@@ -860,19 +884,19 @@ export default function App() {
             ) : (
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-slate-400">Question {currentQuestion + 1} of {quizQuestions.length}</span>
-                  <span className="text-sm text-slate-400">Score: {quizScore}</span>
+                  <span className="text-sm text-emerald-300/70">Question {currentQuestion + 1} of {quizQuestions.length}</span>
+                  <span className="text-sm text-emerald-300/70">Score: {quizScore}</span>
                 </div>
                 
                 {/* Progress bar */}
-                <div className="h-2 bg-slate-800 rounded-full mb-6 overflow-hidden">
+                <div className="h-2 bg-emerald-900/50 rounded-full mb-6 overflow-hidden">
                   <div 
-                    className="h-full bg-purple-500 transition-all duration-300"
+                    className="h-full bg-emerald-500 transition-all duration-300"
                     style={{ width: `${((currentQuestion + 1) / quizQuestions.length) * 100}%` }}
                   />
                 </div>
 
-                <h3 className="text-lg font-medium text-white mb-4">
+                <h3 className="text-lg font-medium text-emerald-50 mb-4">
                   {quizQuestions[currentQuestion].question}
                 </h3>
 
@@ -888,10 +912,10 @@ export default function App() {
                             ? index === quizQuestions[currentQuestion].correct
                               ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                               : 'bg-red-500/20 border-red-500 text-red-400'
-                            : 'bg-purple-500/20 border-purple-500 text-purple-400'
+                            : 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                           : showExplanation && index === quizQuestions[currentQuestion].correct
                           ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                          : 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300'
+                          : 'bg-emerald-900/30 border-emerald-800/50 hover:border-emerald-600 text-emerald-200'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -914,8 +938,8 @@ export default function App() {
                 </div>
 
                 {showExplanation && (
-                  <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-4">
-                    <p className="text-slate-300 text-sm">
+                  <div className="bg-emerald-900/30 border border-emerald-800 rounded-xl p-4 mb-4">
+                    <p className="text-emerald-200 text-sm">
                       <span className="text-purple-400 font-medium">Explanation: </span>
                       {quizQuestions[currentQuestion].explanation}
                     </p>
@@ -926,14 +950,14 @@ export default function App() {
                   <button
                     onClick={handleCheckAnswer}
                     disabled={selectedAnswer === null}
-                    className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 rounded-xl font-medium transition-colors"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 disabled:text-emerald-500 rounded-xl font-medium transition-colors"
                   >
                     Check Answer
                   </button>
                 ) : (
                   <button
                     onClick={handleNextQuestion}
-                    className="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl font-medium transition-colors"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-medium transition-colors"
                   >
                     {currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
                   </button>
@@ -946,16 +970,16 @@ export default function App() {
 
       {/* Achievements Modal */}
       {showAchievements && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-sm">
+          <div className="bg-emerald-950 border border-emerald-800 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-emerald-950/90 backdrop-blur-md border-b border-emerald-900 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-emerald-50 flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-amber-400" />
                 Achievements
               </h2>
               <button 
                 onClick={() => setShowAchievements(false)}
-                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-lg hover:bg-emerald-900 text-emerald-400 hover:text-emerald-200 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -967,15 +991,17 @@ export default function App() {
                   className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
                     achievement.unlocked
                       ? 'bg-amber-500/10 border-amber-500/50'
-                      : 'bg-slate-800/50 border-slate-700 opacity-60'
+                      : 'bg-emerald-900/20 border-emerald-800/50 opacity-60'
                   }`}
                 >
-                  <span className="text-3xl">{achievement.icon}</span>
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    {achievementIcons[achievement.icon] || <Star className="w-6 h-6 text-slate-500" />}
+                  </div>
                   <div className="flex-1">
-                    <div className={`font-medium ${achievement.unlocked ? 'text-amber-400' : 'text-slate-400'}`}>
+                    <div className={`font-medium ${achievement.unlocked ? 'text-amber-400' : 'text-emerald-400/60'}`}>
                       {achievement.name}
                     </div>
-                    <div className="text-sm text-slate-500">{achievement.description}</div>
+                    <div className="text-sm text-emerald-500/60">{achievement.description}</div>
                   </div>
                   {achievement.unlocked && (
                     <Check className="w-5 h-5 text-emerald-400" />
@@ -984,7 +1010,7 @@ export default function App() {
               ))}
             </div>
             <div className="px-6 pb-6 text-center">
-              <p className="text-slate-400 text-sm">
+              <p className="text-emerald-400/70 text-sm">
                 {unlockedCount} of {achievements.length} achievements unlocked
               </p>
             </div>
@@ -994,16 +1020,16 @@ export default function App() {
 
       {/* Challenges Modal */}
       {showChallenges && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-sm">
+          <div className="bg-emerald-950 border border-emerald-800 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-emerald-950/90 backdrop-blur-md border-b border-emerald-900 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-emerald-50 flex items-center gap-2">
                 <Target className="w-5 h-5 text-emerald-400" />
                 Challenges
               </h2>
               <button 
                 onClick={() => setShowChallenges(false)}
-                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-lg hover:bg-emerald-900 text-emerald-400 hover:text-emerald-200 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1015,22 +1041,22 @@ export default function App() {
                   className={`p-4 rounded-xl border transition-all ${
                     challenge.completed
                       ? 'bg-emerald-500/10 border-emerald-500/50'
-                      : 'bg-slate-800/50 border-slate-700'
+                      : 'bg-emerald-900/20 border-emerald-800/50'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-white">{challenge.title}</h3>
+                      <h3 className="font-medium text-emerald-100">{challenge.title}</h3>
                       {challenge.completed && <Check className="w-4 h-4 text-emerald-400" />}
                     </div>
-                    <span className="text-sm text-slate-400">
+                    <span className="text-sm text-emerald-400/70">
                       {challenge.current}/{challenge.target} {challenge.unit}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-400 mb-3">{challenge.description}</p>
+                  <p className="text-sm text-emerald-300/70 mb-3">{challenge.description}</p>
                   
                   {/* Progress bar */}
-                  <div className="h-2 bg-slate-800 rounded-full mb-3 overflow-hidden">
+                  <div className="h-2 bg-emerald-900/50 rounded-full mb-3 overflow-hidden">
                     <div 
                       className={`h-full transition-all duration-500 ${
                         challenge.completed ? 'bg-emerald-500' : 'bg-emerald-500/50'
@@ -1039,7 +1065,7 @@ export default function App() {
                     />
                   </div>
                   
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
+                  <p className="text-xs text-emerald-500/60 flex items-center gap-1">
                     <Lightbulb className="w-3 h-3" />
                     Hint: {challenge.hint}
                   </p>
@@ -1047,7 +1073,7 @@ export default function App() {
               ))}
             </div>
             <div className="px-6 pb-6 text-center">
-              <p className="text-slate-400 text-sm">
+              <p className="text-emerald-400/70 text-sm">
                 {challenges.filter(c => c.completed).length} of {challenges.length} challenges completed
               </p>
             </div>
@@ -1057,26 +1083,26 @@ export default function App() {
 
       {/* DIY Modal */}
       {showDiy && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Info className="w-5 h-5 text-blue-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-sm">
+          <div className="bg-emerald-950 border border-emerald-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-emerald-950/90 backdrop-blur-md border-b border-emerald-900 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-emerald-50 flex items-center gap-2">
+                <Info className="w-5 h-5 text-emerald-400" />
                 Build a Physical Model at Home
               </h2>
               <button 
                 onClick={() => setShowDiy(false)}
-                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-lg hover:bg-emerald-900 text-emerald-400 hover:text-emerald-200 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 space-y-6 text-slate-300">
+            <div className="p-6 space-y-6 text-emerald-200">
               <p>You can easily build a physical version of this model using everyday household items to demonstrate metallic bonding to a class or for a science project.</p>
               
               <div>
-                <h3 className="text-white font-medium mb-3">Materials Needed:</h3>
-                <ul className="list-disc pl-5 space-y-2 text-slate-400">
+                <h3 className="text-emerald-50 font-medium mb-3">Materials Needed:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-emerald-300/70">
                   <li>A clear plastic box or shallow tray (like a Tupperware container)</li>
                   <li>Large, identical spherical objects to represent <strong>cations</strong> (e.g., ping pong balls, marbles, or large beads)</li>
                   <li>Small, highly mobile objects to represent <strong>delocalized electrons</strong> (e.g., small seed beads, BB pellets, or even coarse sand)</li>
@@ -1084,19 +1110,19 @@ export default function App() {
               </div>
 
               <div>
-                <h3 className="text-white font-medium mb-3">How to Build & Demonstrate:</h3>
-                <ol className="list-decimal pl-5 space-y-4 text-slate-400">
+                <h3 className="text-emerald-50 font-medium mb-3">How to Build & Demonstrate:</h3>
+                <ol className="list-decimal pl-5 space-y-4 text-emerald-300/70">
                   <li>
-                    <strong className="text-slate-300">Setup:</strong> Place the large balls (cations) into the clear container so they form a neat, packed layer (a lattice). Pour the small beads (electrons) over them so they fill the gaps.
+                    <strong className="text-emerald-200">Setup:</strong> Place the large balls (cations) into the clear container so they form a neat, packed layer (a lattice). Pour the small beads (electrons) over them so they fill the gaps.
                   </li>
                   <li>
-                    <strong className="text-slate-300">Normal State:</strong> Gently shake the container. Notice how the large balls vibrate slightly in place, while the small beads move freely around and between them.
+                    <strong className="text-emerald-200">Normal State:</strong> Gently shake the container. Notice how the large balls vibrate slightly in place, while the small beads move freely around and between them.
                   </li>
                   <li>
-                    <strong className="text-slate-300">Malleability:</strong> Use a ruler or your hand to push one row of the large balls. Watch how the row slides over the adjacent row, but the small beads immediately flow into the new gaps, keeping the structure "glued" together.
+                    <strong className="text-emerald-200">Malleability:</strong> Use a ruler or your hand to push one row of the large balls. Watch how the row slides over the adjacent row, but the small beads immediately flow into the new gaps, keeping the structure "glued" together.
                   </li>
                   <li>
-                    <strong className="text-slate-300">Conductivity:</strong> Tilt the container slightly. The large balls will mostly stay in their lattice (if packed tightly), but the small beads will rapidly flow to one side, demonstrating how electrons carry a current or heat.
+                    <strong className="text-emerald-200">Conductivity:</strong> Tilt the container slightly. The large balls will mostly stay in their lattice (if packed tightly), but the small beads will rapidly flow to one side, demonstrating how electrons carry a current or heat.
                   </li>
                 </ol>
               </div>
@@ -1106,8 +1132,8 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-900/50 py-4 text-center">
-        <p className="text-sm text-slate-500">author: Kirk</p>
+      <footer className="border-t border-emerald-900 bg-emerald-950/50 py-4 text-center">
+        <p className="text-sm text-emerald-500/60">author: Kirk</p>
       </footer>
     </div>
   );
