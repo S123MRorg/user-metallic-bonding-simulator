@@ -728,7 +728,7 @@ export default function App() {
             {/* Theme Toggle Button - Rectangle Toggle with Sun/Moon */}
             <button
               onClick={toggleTheme}
-              className={`relative flex items-center h-10 rounded-xl overflow-hidden ${bgSecondary} ${borderColor} border transition-all hover:scale-105 active:scale-95 shadow-sm`}
+              className={`relative flex items-center h-10 rounded-xl overflow-hidden ${bgSecondary} ${borderColor} border transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm`}
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {/* Dark mode indicator (left) */}
@@ -743,7 +743,7 @@ export default function App() {
             {/* Achievement Button */}
             <button
               onClick={() => setShowAchievements(true)}
-              className={`relative flex items-center gap-2 px-3 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-colors text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
+              className={`relative flex items-center gap-2 px-3 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-105 active:scale-95 text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
             >
               <Trophy className="w-4 h-4 text-amber-400" />
               <span className="hidden sm:inline">{unlockedCount}/{achievements.length}</span>
@@ -751,7 +751,7 @@ export default function App() {
             {/* Challenge Button */}
             <button
               onClick={() => setShowChallenges(true)}
-              className={`relative flex items-center gap-2 px-3 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-colors text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
+              className={`relative flex items-center gap-2 px-3 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-105 active:scale-95 text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
             >
               <Target className="w-4 h-4 text-emerald-400" />
               <span className="hidden sm:inline">Challenges</span>
@@ -764,7 +764,7 @@ export default function App() {
             {/* Quiz Button */}
             <button
               onClick={() => setShowQuiz(true)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-colors text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-105 active:scale-95 text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
             >
               <Star className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
               <span className="hidden sm:inline">Quiz</span>
@@ -772,7 +772,7 @@ export default function App() {
             {/* DIY Button */}
             <button
               onClick={() => setShowDiy(true)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-colors text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-105 active:scale-95 text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
             >
               <Info className="w-4 h-4" />
               <span className="hidden sm:inline">DIY Model</span>
@@ -790,7 +790,7 @@ export default function App() {
             <div className="space-y-3">
               <button
                 onClick={() => setMode('normal')}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
+                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                   mode === 'normal' 
                     ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' 
                     : `${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} ${textSecondary}`
@@ -805,7 +805,7 @@ export default function App() {
 
               <button
                 onClick={() => setMode('malleable')}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
+                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                   mode === 'malleable' 
                     ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' 
                     : `${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} ${textSecondary}`
@@ -865,7 +865,7 @@ export default function App() {
 
               <button
                 onClick={() => setMode('electrical')}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
+                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                   mode === 'electrical' 
                     ? 'bg-amber-500/10 border-amber-500/50 text-amber-400' 
                     : `${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} ${textSecondary}`
@@ -880,7 +880,7 @@ export default function App() {
 
               <button
                 onClick={() => setMode('circuit')}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
+                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                   mode === 'circuit' 
                     ? `${isDark ? 'bg-purple-500/10 border-purple-500/50 text-purple-400' : 'bg-blue-500/10 border-blue-500/50 text-blue-600'}` 
                     : `${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} ${textSecondary}`
@@ -895,7 +895,7 @@ export default function App() {
 
               <button
                 onClick={() => setMode('heat')}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
+                className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                   mode === 'heat' 
                     ? 'bg-rose-500/10 border-rose-500/50 text-rose-400' 
                     : `${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} ${textSecondary}`
@@ -911,7 +911,7 @@ export default function App() {
           </div>
 
           {/* Advanced Features Dropdown */}
-          <div className={`${bgCard} border ${borderColor}/50 rounded-2xl overflow-hidden transition-all duration-300`}>
+          <div className={`${bgCard} border ${borderColor}/50 rounded-2xl overflow-hidden transition-all duration-300 card-hover`}>
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
               className={`w-full flex items-center justify-between p-5 ${isDark ? 'hover:bg-slate-700/70' : 'hover:bg-slate-100/80'} transition-all duration-200 rounded-t-2xl group`}
@@ -922,15 +922,15 @@ export default function App() {
               </h2>
               <div className={`p-1 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-slate-200'} group-hover:scale-110 transition-transform duration-200`}>
                 {showAdvanced ? (
-                  <ChevronUp className={`w-4 h-4 ${textMuted}`} />
+                  <ChevronUp className={`w-4 h-4 ${textMuted} transition-transform duration-300`} />
                 ) : (
-                  <ChevronDown className={`w-4 h-4 ${textMuted}`} />
+                  <ChevronDown className={`w-4 h-4 ${textMuted} transition-transform duration-300`} />
                 )}
               </div>
             </button>
             
             {showAdvanced && (
-              <div className="px-6 pb-6 space-y-4">
+              <div className="px-6 pb-6 space-y-4 animate-fade-in">
                 {/* Animation Speed */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -1091,7 +1091,7 @@ export default function App() {
                           setCrystalStructure(structure);
                           trackFeature('crystal_view');
                         }}
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 ${
                           crystalStructure === structure
                             ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
                             : `${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'} ${isDark ? 'text-slate-400' : 'text-slate-600'} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-200'}`
@@ -1138,12 +1138,12 @@ export default function App() {
 
           {/* Secret Mode: Export Section */}
           {secretModeEnabled && (
-            <div className={`${bgCard} border ${borderColor}/50 rounded-2xl p-6`}>
+            <div className={`${bgCard} border ${borderColor}/50 rounded-2xl p-6 card-hover`}>
               <h2 className={`text-sm font-semibold ${textSecondary} uppercase tracking-wider mb-4`}>Export</h2>
               <button
                 onClick={() => setIsRecording(true)}
                 disabled={isRecording}
-                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${isDark ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-violet-600 hover:bg-violet-500'} ${isDark ? 'disabled:bg-slate-700 disabled:text-slate-400' : 'disabled:bg-slate-300 disabled:text-slate-500'} transition-colors font-medium text-white`}
+                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${isDark ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-violet-600 hover:bg-violet-500'} ${isDark ? 'disabled:bg-slate-700 disabled:text-slate-400' : 'disabled:bg-slate-300 disabled:text-slate-500'} transition-all duration-200 hover:scale-[1.02] active:scale-95 font-medium text-white`}
               >
                 {isRecording ? (
                   <>
@@ -1252,13 +1252,13 @@ export default function App() {
 
           {/* Simulation Canvas */}
           <div 
-            className={`${bgCard} border ${borderColor}/50 rounded-2xl p-2 sm:p-4 flex-grow flex flex-col items-center justify-center relative overflow-hidden ${isFullscreen ? '!rounded-none !border-0 mt-2' : 'mt-4'}`}
+            className={`${bgCard} border ${borderColor}/50 rounded-2xl p-2 sm:p-4 flex-grow flex flex-col items-center justify-center relative overflow-hidden card-hover ${isFullscreen ? '!rounded-none !border-0 mt-2' : 'mt-4'}`}
             style={isFullscreen ? { maxWidth: '1400px', margin: '0 auto', width: 'calc(100% - 16px)', minHeight: '70vh' } : {}}
           >
             {/* Fullscreen Toggle Button */}
             <button
               onClick={toggleFullscreen}
-              className={`absolute top-4 right-4 z-10 p-2 rounded-lg ${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} border ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-colors`}
+              className={`absolute top-4 right-4 z-10 p-2 rounded-lg ${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} border ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-110 active:scale-95`}
               title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             >
               {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
@@ -1309,7 +1309,7 @@ export default function App() {
           
           {/* Description Box - Hidden in fullscreen mode */}
           {!isFullscreen && (
-          <div className={`mt-6 ${bgCard} border ${borderColor}/50 rounded-2xl p-6`}>
+          <div className={`mt-6 ${bgCard} border ${borderColor}/50 rounded-2xl p-6 card-hover`}>
             <h3 className={`text-lg font-medium ${textPrimary} mb-2`}>
               {mode === 'normal' && "The 'Sea of Electrons' Model"}
               {mode === 'malleable' && "Malleability & Ductility"}
@@ -1333,7 +1333,7 @@ export default function App() {
       {/* Quiz Modal - With Category Selection */}
       {showQuiz && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-colors duration-300`}>
-          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
+          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in`}>
             <div className={`sticky top-0 ${modalBg}/90 backdrop-blur-md border-b ${modalBorder} p-6 flex items-center justify-between`}>
               <h2 className={`text-xl font-semibold ${textPrimary} flex items-center gap-2`}>
                 <Star className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
@@ -1341,7 +1341,7 @@ export default function App() {
               </h2>
               <button 
                 onClick={() => { setShowQuiz(false); setSelectedCategory(null); }}
-                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-colors`}
+                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-all duration-200 hover:scale-110 active:scale-95`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1354,7 +1354,7 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => startQuizWithCategory('basic')}
-                    className={`p-4 rounded-xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-blue-400 hover:bg-slate-200'} text-left`}
+                    className={`p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-blue-400 hover:bg-slate-200'} text-left`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-4 h-4 text-blue-400" />
@@ -1365,7 +1365,7 @@ export default function App() {
                   
                   <button
                     onClick={() => startQuizWithCategory('electrical')}
-                    className={`p-4 rounded-xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:border-amber-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-amber-400 hover:bg-slate-200'} text-left`}
+                    className={`p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:border-amber-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-amber-400 hover:bg-slate-200'} text-left`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-4 h-4 text-amber-400" />
@@ -1376,7 +1376,7 @@ export default function App() {
                   
                   <button
                     onClick={() => startQuizWithCategory('heat')}
-                    className={`p-4 rounded-xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:border-rose-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-rose-400 hover:bg-slate-200'} text-left`}
+                    className={`p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:border-rose-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-rose-400 hover:bg-slate-200'} text-left`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Flame className="w-4 h-4 text-rose-400" />
@@ -1387,7 +1387,7 @@ export default function App() {
                   
                   <button
                     onClick={() => startQuizWithCategory('malleability')}
-                    className={`p-4 rounded-xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:border-emerald-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-emerald-400 hover:bg-slate-200'} text-left`}
+                    className={`p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:border-emerald-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-emerald-400 hover:bg-slate-200'} text-left`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Move className="w-4 h-4 text-emerald-400" />
@@ -1398,7 +1398,7 @@ export default function App() {
                   
                   <button
                     onClick={() => startQuizWithCategory('alloys')}
-                    className={`p-4 rounded-xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:border-amber-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-amber-400 hover:bg-slate-200'} text-left`}
+                    className={`p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:border-amber-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-amber-400 hover:bg-slate-200'} text-left`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Gem className="w-4 h-4 text-amber-400" />
@@ -1409,7 +1409,7 @@ export default function App() {
                   
                   <button
                     onClick={() => startQuizWithCategory('mixed')}
-                    className={`p-4 rounded-xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:border-purple-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-purple-400 hover:bg-slate-200'} text-left`}
+                    className={`p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:border-purple-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-purple-400 hover:bg-slate-200'} text-left`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
@@ -1436,13 +1436,13 @@ export default function App() {
                 <div className="flex gap-3 justify-center">
                   <button
                     onClick={handleBackToCategories}
-                    className={`px-6 py-3 ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-200 hover:bg-slate-300'} rounded-xl font-medium transition-colors`}
+                    className={`px-6 py-3 ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-200 hover:bg-slate-300'} rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95`}
                   >
                     Other Categories
                   </button>
                   <button
                     onClick={handleRestartQuiz}
-                    className={`px-6 py-3 ${isDark ? 'bg-purple-600 hover:bg-purple-500' : 'bg-violet-600 hover:bg-violet-500'} rounded-xl font-medium transition-colors text-white`}
+                    className={`px-6 py-3 ${isDark ? 'bg-purple-600 hover:bg-purple-500' : 'bg-violet-600 hover:bg-violet-500'} rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 text-white`}
                   >
                     Try Again
                   </button>
@@ -1453,7 +1453,7 @@ export default function App() {
                 <div className="flex items-center justify-between mb-4">
                   <button
                     onClick={handleBackToCategories}
-                    className={`text-sm ${textMuted} hover:${textPrimary} transition-colors flex items-center gap-1`}
+                    className={`text-sm ${textMuted} hover:${textPrimary} transition-all duration-200 hover:scale-105 flex items-center gap-1`}
                   >
                     <ChevronDown className="w-4 h-4 rotate-90" />
                     Back to Categories
@@ -1464,7 +1464,7 @@ export default function App() {
                 {/* Progress bar */}
                 <div className={`h-2 ${isDark ? 'bg-slate-800' : 'bg-slate-200'} rounded-full mb-6 overflow-hidden`}>
                   <div 
-                    className="h-full bg-purple-500 transition-all duration-300"
+                    className="h-full bg-purple-500 transition-all duration-500 ease-out animate-pulse-subtle"
                     style={{ width: `${((currentQuestion + 1) / activeQuizQuestions.length) * 100}%` }}
                   />
                 </div>
@@ -1479,7 +1479,7 @@ export default function App() {
                       key={index}
                       onClick={() => handleAnswerSelect(index)}
                       disabled={showExplanation}
-                      className={`w-full text-left p-4 rounded-xl border transition-all ${
+                      className={`w-full text-left p-4 rounded-xl border transition-all duration-200 hover:scale-[1.01] ${
                         selectedAnswer === index
                           ? showExplanation
                             ? index === activeQuizQuestions[currentQuestion].correct
@@ -1523,14 +1523,14 @@ export default function App() {
                   <button
                     onClick={handleCheckAnswer}
                     disabled={selectedAnswer === null}
-                    className={`w-full py-3 ${isDark ? 'bg-purple-600 hover:bg-purple-500' : 'bg-violet-600 hover:bg-violet-500'} ${isDark ? 'disabled:bg-slate-700 disabled:text-slate-500' : 'disabled:bg-slate-300 disabled:text-slate-500'} rounded-xl font-medium transition-colors text-white`}
+                    className={`w-full py-3 ${isDark ? 'bg-purple-600 hover:bg-purple-500' : 'bg-violet-600 hover:bg-violet-500'} ${isDark ? 'disabled:bg-slate-700 disabled:text-slate-500' : 'disabled:bg-slate-300 disabled:text-slate-500'} rounded-xl font-medium transition-all duration-200 hover:scale-[1.02] active:scale-95 text-white`}
                   >
                     Check Answer
                   </button>
                 ) : (
                   <button
                     onClick={handleNextQuestion}
-                    className={`w-full py-3 ${isDark ? 'bg-purple-600 hover:bg-purple-500' : 'bg-violet-600 hover:bg-violet-500'} rounded-xl font-medium transition-colors text-white`}
+                    className={`w-full py-3 ${isDark ? 'bg-purple-600 hover:bg-purple-500' : 'bg-violet-600 hover:bg-violet-500'} rounded-xl font-medium transition-all duration-200 hover:scale-[1.02] active:scale-95 text-white`}
                   >
                     {currentQuestion < activeQuizQuestions.length - 1 ? 'Next Question' : 'See Results'}
                   </button>
@@ -1544,7 +1544,7 @@ export default function App() {
       {/* Achievements Modal */}
       {showAchievements && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-colors duration-300`}>
-          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
+          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in`}>
             <div className={`sticky top-0 ${modalBg}/90 backdrop-blur-md border-b ${modalBorder} p-6 flex items-center justify-between`}>
               <h2 className={`text-xl font-semibold ${textPrimary} flex items-center gap-2`}>
                 <Trophy className="w-5 h-5 text-amber-400" />
@@ -1552,7 +1552,7 @@ export default function App() {
               </h2>
               <button 
                 onClick={() => setShowAchievements(false)}
-                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-colors`}
+                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-all duration-200 hover:scale-110 active:scale-95`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1561,7 +1561,7 @@ export default function App() {
               {achievements.map((achievement) => (
                 <div
                   key={achievement.id}
-                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${
                     achievement.unlocked
                       ? 'bg-amber-500/10 border-amber-500/50'
                       : `${bgCard} border-slate-700 opacity-60`
@@ -1592,7 +1592,7 @@ export default function App() {
       {/* Challenges Modal */}
       {showChallenges && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-colors duration-300`}>
-          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
+          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in`}>
             <div className={`sticky top-0 ${modalBg}/90 backdrop-blur-md border-b ${modalBorder} p-6 flex items-center justify-between`}>
               <h2 className={`text-xl font-semibold ${textPrimary} flex items-center gap-2`}>
                 <Target className="w-5 h-5 text-emerald-400" />
@@ -1600,7 +1600,7 @@ export default function App() {
               </h2>
               <button 
                 onClick={() => setShowChallenges(false)}
-                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-colors`}
+                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-all duration-200 hover:scale-110 active:scale-95`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1609,7 +1609,7 @@ export default function App() {
               {challenges.map((challenge) => (
                 <div
                   key={challenge.id}
-                  className={`p-4 rounded-xl border transition-all ${
+                  className={`p-4 rounded-xl border transition-all duration-300 ${
                     challenge.completed
                       ? 'bg-emerald-500/10 border-emerald-500/50'
                       : `${bgCard} border-slate-700`
@@ -1629,7 +1629,7 @@ export default function App() {
                   {/* Progress bar */}
                   <div className={`h-2 ${isDark ? 'bg-slate-800' : 'bg-slate-200'} rounded-full mb-3 overflow-hidden`}>
                     <div 
-                      className={`h-full transition-all duration-500 ${challenge.completed ? 'bg-emerald-500' : 'bg-emerald-500/50'}`}
+                      className={`h-full transition-all duration-700 ease-out ${challenge.completed ? 'bg-emerald-500' : 'bg-emerald-500/50'}`}
                       style={{ width: `${(challenge.current / challenge.target) * 100}%` }}
                     />
                   </div>
@@ -1653,7 +1653,7 @@ export default function App() {
       {/* DIY Modal */}
       {showDiy && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-colors duration-300`}>
-          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
+          <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in`}>
             <div className={`sticky top-0 ${modalBg}/90 backdrop-blur-md border-b ${modalBorder} p-6 flex items-center justify-between`}>
               <h2 className={`text-xl font-semibold ${textPrimary} flex items-center gap-2`}>
                 <Info className="w-5 h-5 text-blue-400" />
@@ -1661,7 +1661,7 @@ export default function App() {
               </h2>
               <button 
                 onClick={() => setShowDiy(false)}
-                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-colors`}
+                className={`p-2 rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${textMuted} hover:${textPrimary} transition-all duration-200 hover:scale-110 active:scale-95`}
               >
                 <X className="w-5 h-5" />
               </button>
