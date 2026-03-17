@@ -34,6 +34,7 @@ interface Props {
   isRecording?: boolean;
   animationSpeed: number;
   autoMalleable?: boolean;
+  autoDemoSpeed?: number;
   onRecordingComplete?: (blob: Blob) => void;
   onRecordingProgress?: (progress: number) => void;
   temperature?: number;
@@ -87,6 +88,7 @@ export default function MetalSimulation({
   isRecording, 
   animationSpeed, 
   autoMalleable, 
+  autoDemoSpeed = 2, 
   onRecordingComplete, 
   onRecordingProgress,
   temperature = 0,
@@ -352,7 +354,7 @@ export default function MetalSimulation({
       camRef.current.zoom += (targetZoom - camRef.current.zoom) * 0.05;
 
       if (mode === 'malleable' && autoMalleable) {
-        autoMalleableTime.current += 0.02 * Math.max(0.5, Math.min(animationSpeed, 5));
+        autoMalleableTime.current += 0.02 * Math.max(0.5, Math.min(autoDemoSpeed, 5));
         const shift = Math.sin(autoMalleableTime.current) * 60;
         
         cations.forEach(c => {
@@ -736,7 +738,7 @@ export default function MetalSimulation({
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [mode, isRecording, animationSpeed, autoMalleable, singleLayerMode, onRecordingComplete, onRecordingProgress, onLayerSlide]);
+  }, [mode, isRecording, animationSpeed, autoMalleable, autoDemoSpeed, singleLayerMode, onRecordingComplete, onRecordingProgress, onLayerSlide]);
 
   // Mouse Interaction for Malleable Mode
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {

@@ -415,6 +415,7 @@ export default function App() {
   const [showDiy, setShowDiy] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState<number>(0.25);
   const [autoMalleable, setAutoMalleable] = useState(false);
+  const [autoDemoSpeed, setAutoDemoSpeed] = useState<number>(2); // Default 2x speed for auto demonstrate
   
   // Secret mode state - enabled when user types "secret-git" on the page
   const [secretModeEnabled, setSecretModeEnabled] = useState(false);
@@ -969,6 +970,34 @@ export default function App() {
                   </p>
                 </div>
 
+                {/* Auto Demonstrate Speed */}
+                {mode === 'malleable' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className={`w-4 h-4 ${isDark ? 'text-cyan-400' : 'text-cyan-500'}`} />
+                        <span className={`text-sm ${textSecondary}`}>Auto Demo Speed</span>
+                        <div className="group relative">
+                          <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
+                          <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
+                            Controls how fast the auto-demonstration animates. Adjust between 0.5x (slow) to 5x (fast).
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`text-xs ${textMuted}`}>{autoDemoSpeed.toFixed(1)}x</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0.5" 
+                      max="5" 
+                      step="0.1"
+                      value={autoDemoSpeed} 
+                      onChange={(e) => setAutoDemoSpeed(Number(e.target.value))}
+                      className="w-full accent-cyan-500"
+                    />
+                  </div>
+                )}
+
                 {/* Temperature Control */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -1279,6 +1308,7 @@ export default function App() {
               isRecording={isRecording}
               animationSpeed={animationSpeed}
               autoMalleable={autoMalleable}
+              autoDemoSpeed={autoDemoSpeed}
               singleLayerMode={singleLayerMode}
               onRecordingComplete={handleRecordingComplete}
               onRecordingProgress={setRecordingProgress}
