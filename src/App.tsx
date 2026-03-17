@@ -733,7 +733,7 @@ export default function App() {
             >
               {/* Dark mode indicator (left) */}
               <div className={`flex items-center justify-center w-12 h-full transition-colors ${isDark ? 'bg-slate-700' : 'hover:bg-slate-200'}`}>
-                <Moon className="w-4 h-4 text-slate-300" />
+                <Moon className={`w-4 h-4 ${isDark ? 'text-slate-300' : 'text-slate-600'}`} />
               </div>
               {/* Light mode indicator (right) */}
               <div className={`flex items-center justify-center w-12 h-full transition-colors ${!isDark ? 'bg-orange-100' : 'hover:bg-slate-200'}`}>
@@ -766,7 +766,7 @@ export default function App() {
               onClick={() => setShowQuiz(true)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bgSecondary} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-colors text-sm font-medium ${isDark ? 'border-slate-700' : 'border-slate-200'} border`}
             >
-              <Star className="w-4 h-4 text-purple-400" />
+              <Star className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
               <span className="hidden sm:inline">Quiz</span>
             </button>
             {/* DIY Button */}
@@ -882,7 +882,7 @@ export default function App() {
                 onClick={() => setMode('circuit')}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
                   mode === 'circuit' 
-                    ? 'bg-purple-500/10 border-purple-500/50 text-purple-400' 
+                    ? `${isDark ? 'bg-purple-500/10 border-purple-500/50 text-purple-400' : 'bg-blue-500/10 border-blue-500/50 text-blue-600'}` 
                     : `${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} ${textSecondary}`
                 } border`}
               >
@@ -1045,7 +1045,7 @@ export default function App() {
                 {/* Electron Trails */}
                 <div className={`flex items-center justify-between py-2 ${isDark ? 'border-t border-slate-700/50' : 'border-t border-slate-200'}`}>
                   <div className="flex items-center gap-2">
-                    <Eye className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-500'}`} />
+                    <Eye className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
                     <span className={`text-sm ${textSecondary}`}>Electron Trails</span>
                     <div className="group relative">
                       <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
@@ -1223,7 +1223,7 @@ export default function App() {
 
               {/* Electron Trails Toggle */}
               <div className="flex items-center gap-2">
-                <Eye className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-500'}`} />
+                <Eye className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
                 <span className={`text-xs ${textMuted}`}>Trails</span>
                 <div className="group relative">
                   <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
@@ -1336,7 +1336,7 @@ export default function App() {
           <div className={`${modalBg} border ${modalBorder} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
             <div className={`sticky top-0 ${modalBg}/90 backdrop-blur-md border-b ${modalBorder} p-6 flex items-center justify-between`}>
               <h2 className={`text-xl font-semibold ${textPrimary} flex items-center gap-2`}>
-                <Star className="w-5 h-5 text-purple-400" />
+                <Star className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
                 {selectedCategory ? `Quiz: ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}` : 'Choose Quiz Category'}
               </h2>
               <button 
@@ -1412,7 +1412,7 @@ export default function App() {
                     className={`p-4 rounded-xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:border-purple-500 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 hover:border-purple-400 hover:bg-slate-200'} text-left`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
                       <span className={`font-medium ${textPrimary}`}>Mixed Challenge</span>
                     </div>
                     <span className={`text-xs ${textMuted}`}>10 random questions</span>
@@ -1485,7 +1485,7 @@ export default function App() {
                             ? index === activeQuizQuestions[currentQuestion].correct
                               ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                               : 'bg-red-500/20 border-red-500 text-red-400'
-                            : 'bg-purple-500/20 border-purple-500 text-purple-400'
+                            : `${isDark ? 'bg-purple-500/20 border-purple-500 text-purple-400' : 'bg-blue-500/20 border-blue-500 text-blue-600'}`
                           : showExplanation && index === activeQuizQuestions[currentQuestion].correct
                           ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                           : `${isDark ? 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300' : 'bg-slate-100 border-slate-300 hover:border-slate-400 text-slate-700'}`
@@ -1513,7 +1513,7 @@ export default function App() {
                 {showExplanation && (
                   <div className={`border rounded-xl p-4 mb-4 ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100 border-slate-300'}`}>
                     <p className={textSecondary}>
-                      <span className="text-purple-400 font-medium">Explanation: </span>
+                      <span className={`${isDark ? 'text-purple-400' : 'text-blue-600'} font-medium`}>Explanation: </span>
                       {activeQuizQuestions[currentQuestion].explanation}
                     </p>
                   </div>

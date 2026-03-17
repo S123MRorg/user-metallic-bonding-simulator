@@ -116,12 +116,12 @@
   --theme-text-primary: #0f172a;
   --theme-text-secondary: #475569;
   --theme-text-muted: #64748b;
-  --theme-accent: #7c3aed;
-  --theme-accent-hover: #6d28d9;
-  --theme-accent-light: rgba(124, 58, 237, 0.1);
-  --theme-accent-border: rgba(124, 58, 237, 0.5);
+  --theme-accent: #2563eb;
+  --theme-accent-hover: #1d4ed8;
+  --theme-accent-light: rgba(37, 99, 235, 0.1);
+  --theme-accent-border: rgba(37, 99, 235, 0.5);
   --theme-shadow: rgba(0, 0, 0, 0.1);
-  --theme-glow: rgba(124, 58, 237, 0.2);
+  --theme-glow: rgba(37, 99, 235, 0.2);
   
   /* Modal overlay */
   --theme-overlay: rgba(241, 245, 249, 0.9);
