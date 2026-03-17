@@ -716,26 +716,26 @@ export default function MetalSimulation({
       // Draw Overlay Text for Heat Mode - more compact info panel
       if (mode === 'heat' && overlayTitle) {
         ctx.fillStyle = isLight ? 'rgba(241, 245, 249, 0.95)' : 'rgba(15, 23, 42, 0.85)'; // slate-50 for light, slate-900 for dark
-        ctx.fillRect(20, CANVAS_HEIGHT - 80, CANVAS_WIDTH - 40, 60);  // smaller panel
+        ctx.fillRect(20, CANVAS_HEIGHT - 110, CANVAS_WIDTH - 40, 80);  // taller panel for better proportion
         ctx.strokeStyle = isLight ? '#cbd5e1' : '#334155';
         ctx.lineWidth = 2;
-        ctx.strokeRect(20, CANVAS_HEIGHT - 80, CANVAS_WIDTH - 40, 60);
+        ctx.strokeRect(20, CANVAS_HEIGHT - 110, CANVAS_WIDTH - 40, 80);
 
         ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc'; // slate-900 for light, slate-50 for dark
-        ctx.font = 'bold 15px Inter, sans-serif';
+        ctx.font = 'bold 16px Inter, sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.fillText(overlayTitle, 40, CANVAS_HEIGHT - 70);
+        ctx.fillText(overlayTitle, 40, CANVAS_HEIGHT - 100);
 
         ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'; // slate-500 for light, slate-400 for dark
-        ctx.font = '13px Inter, sans-serif';
-        ctx.fillText(overlayText, 40, CANVAS_HEIGHT - 48, CANVAS_WIDTH - 80);
+        ctx.font = '14px Inter, sans-serif';
+        ctx.fillText(overlayText, 40, CANVAS_HEIGHT - 75, CANVAS_WIDTH - 80);
         
-        // Progress bar - thinner
+        // Progress bar
         const totalDuration = 24; // 24 seconds total loop
         const progress = (heatTimeRef.current % totalDuration) / totalDuration;
         ctx.fillStyle = '#ef4444'; // red-500
-        ctx.fillRect(20, CANVAS_HEIGHT - 20, (CANVAS_WIDTH - 40) * progress, 3);  // thinner bar
+        ctx.fillRect(20, CANVAS_HEIGHT - 30, (CANVAS_WIDTH - 40) * progress, 3);  // progress bar at bottom
       }
 
       // Handle GIF Recording
