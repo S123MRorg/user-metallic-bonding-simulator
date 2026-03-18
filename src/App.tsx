@@ -1253,7 +1253,7 @@ export default function App() {
             {/* Fullscreen Toggle Button - Enhanced for fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className={`absolute top-4 right-4 z-20 p-2.5 rounded-lg ${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} border ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg ${isFullscreen ? 'bg-red-500/90 hover:bg-red-600 border-red-400 text-white' : ''}`}
+              className={`absolute top-4 right-4 z-20 p-2.5 rounded-lg ${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} border ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg ${isFullscreen ? (isDark ? 'bg-red-500/90 hover:bg-red-600 border-red-400 text-white' : 'bg-black hover:bg-gray-800 border-gray-600 text-white') : ''}`}
               title={isFullscreen ? 'Exit Fullscreen (F or Esc)' : 'Fullscreen (F)'}
             >
               {isFullscreen ? (
@@ -1291,19 +1291,19 @@ export default function App() {
                 <div className={`w-4 h-4 rounded-full bg-red-500 border ${isDark ? 'border-red-700' : 'border-red-400'} flex items-center justify-center`}>
                   <span className="text-[8px] font-bold text-white">+</span>
                 </div>
-                <span className={isFullscreen ? 'text-white/90 text-xs' : textSecondary}>Metal A Cation</span>
+                <span className={isFullscreen ? (isDark ? 'text-white/90 text-xs' : 'text-black/90 text-xs') : textSecondary}>Metal A Cation</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className={`w-4 h-4 rounded-full bg-amber-500 border ${isDark ? 'border-amber-700' : 'border-amber-400'} flex items-center justify-center`}>
                   <span className="text-[8px] font-bold text-white">+</span>
                 </div>
-                <span className={isFullscreen ? 'text-white/90 text-xs' : textSecondary}>Metal B (Alloy)</span>
+                <span className={isFullscreen ? (isDark ? 'text-white/90 text-xs' : 'text-black/90 text-xs') : textSecondary}>Metal B (Alloy)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className={`w-3 h-3 rounded-full bg-blue-400 flex items-center justify-center`}>
                   <span className="text-[8px] font-bold text-white">-</span>
                 </div>
-                <span className={isFullscreen ? 'text-white/90 text-xs' : textSecondary}>Delocalized Electron</span>
+                <span className={isFullscreen ? (isDark ? 'text-white/90 text-xs' : 'text-black/90 text-xs') : textSecondary}>Delocalized Electron</span>
               </div>
             </div>
           </div>
