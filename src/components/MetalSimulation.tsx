@@ -464,7 +464,12 @@ export default function MetalSimulation({
                e.wireTargetY = 200 + Math.random() * 300; 
                e.x = bounds.x + bounds.w; 
             }
-            if (e.x < bounds.x) { e.x = bounds.x; e.vx = Math.abs(e.vx); }
+            if (e.x < bounds.x) {
+               e.x = bounds.x;
+               e.vx = Math.abs(e.vx) * 0.5; // Slower initial velocity for smooth spread
+               e.vy = (Math.random() - 0.5) * 2; // Random vertical spread
+               e.state = 'metal';
+            }
             if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
             if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
           } else {
