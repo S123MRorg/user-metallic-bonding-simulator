@@ -60,18 +60,14 @@ const SPACING_X = CANVAS_WIDTH / (COLS + 1);
 const SPACING_Y = CANVAS_HEIGHT / (ROWS + 1);
 
 function getWirePos(progress: number, exitY: number, entryY: number) {
-  // Wire path for circuit mode:
-  // Electrons enter at top connection (right side of metal), go through circuit, exit at bottom connection (left side of metal)
-  // Then spread through the metal sample from entry to exit
+  // Wire path for circuit mode (wire only, NOT through metal):
+  // Electrons exit wire at right edge of metal, travel through circuit, re-enter at left edge
   
-  // Connection points (scaled 2x from old):
-  // Top connection: x=900, y=350 (right side of metal)
-  // Bottom connection: x=300, y=350 (left side of metal)
+  // Total wire path: 1560 (without metal segment)
+  // Metal edges: x=300 (left) and x=900 (right), y=350 (connection line)
   
-  // Total path: wire travel + metal travel
-  
-  // 1. Move from metal exit (right side, top connection) to wire start
-  if (progress < 60) return { x: 900, y: exitY + (350 - exitY) * (progress / 60) };
+  // 1. Move from metal exit (right edge, y=350) to wire start
+  if (progress < 60) return { x: 900, y: exitY };
   progress -= 60;
   
   // 2. Move right along top wire to bulb position
@@ -98,9 +94,9 @@ function getWirePos(progress: number, exitY: number, entryY: number) {
   if (progress < 200) return { x: 240, y: 550 - progress };
   progress -= 200;
   
-  // 8. Move right to metal entry point
-  if (progress < 60) return { x: 240 + progress * 1, y: 350 + (entryY - 350) * (progress / 60) };
-  return { x: 300, y: entryY };
+  // 8. Move right to metal entry point (but stop at edge, don't go through)
+  if (progress < 60) return { x: 240 + progress, y: 350 };
+  return { x: 300, y: 350 };
 }
 
 export default function MetalSimulation({ 
@@ -436,24 +432,25 @@ export default function MetalSimulation({
              const wireSpeed = 2 + (voltage / 100) * 6;
              e.wireProgress! += wireSpeed * dt; 
              
-             // Calculate total path length for new wire layout
+             // Calculate total path length for wire ONLY (without metal segment)
              // Path segments:
-             // 1. Metal exit to wire start: 60
+             // 1. From edge to wire start: 60
              // 2. Right to bulb: 140
              // 3. Down to battery: 200
              // 4. Left to battery (+): 400
              // 5. Through battery: 100
              // 6. Left from battery (-): 400
              // 7. Up to connection: 200
-             // 8. To metal entry: 60
-             const totalPathLength = 60 + 140 + 200 + 400 + 100 + 400 + 200 + 60;
+             // 8. To edge: 60 (but we stop before this)
+             // Total wire path = 60 + 140 + 200 + 400 + 100 + 400 + 200 + 60 = 1560
+             const totalPathLength = 1560;
 
-             if (e.wireProgress! >= totalPathLength) {
+             if (e.wireProgress! >= 1560) { // Wire path WITHOUT the metal segment
                 e.state = 'metal';
-                e.x = bounds.x + Math.random() * bounds.w; // Enter at left edge
-                e.y = bounds.y + Math.random() * bounds.h;
+                e.x = bounds.x; // Enter at left edge
+                e.y = 350; // Enter at connection point
                 e.vx = 2 + (voltage / 50); // Initial velocity based on voltage
-                e.vy = (Math.random() - 0.5) * 2;
+                e.vy = (Math.random() - 0.5) * 3; // More vertical spread to fill metal
              } else {
                 const pos = getWirePos(e.wireProgress!, e.exitY!, e.entryY!);
                 e.x = pos.x;
@@ -510,18 +507,20 @@ export default function MetalSimulation({
             if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
           } else if (mode === 'circuit') {
             // Connection points: right side (exit) at y=350, left side (entry) at y=350
-            if (e.x >= bounds.x + bounds.w) {
-               // Enter wire at top connection point (y=350)
+            if (e.x >= bounds.x + bounds.w - 5) {
+               // Enter wire at the edge - smooth transition
                e.state = 'wire';
                e.wireProgress = 0;
-               e.exitY = 350; // Fixed exit at top connection
-               e.entryY = 350; // Fixed entry at bottom connection (will return to same level)
+               e.exitY = e.y; // Exit at current y position (at edge)
             }
-            if (e.x < bounds.x) {
-               // Re-enter from wire at bottom connection point
+            if (e.x < bounds.x + 5) {
+               // Re-enter from wire at the edge - smooth transition
                e.x = bounds.x;
-               e.y = 350; // Enter at bottom connection
-               e.vx = Math.abs(e.vx); // Ensure positive velocity (moving right)
+               e.y = e.y; // Enter at current y position
+               e.vx = Math.abs(e.vx) * 0.5; // Slower initial velocity for smooth spread
+               // Give some random vertical velocity to spread through metal
+               e.vy = (Math.random() - 0.5) * 2;
+               e.state = 'metal';
             }
             if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
             if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
@@ -594,9 +593,8 @@ export default function MetalSimulation({
         
         // Left wire (from battery negative)
         ctx.moveTo(640, 550);  // From battery negative
-        ctx.lineTo(240, 550);  // To left
-        ctx.lineTo(240, 350);  // Up to bottom-left connection
-        ctx.lineTo(300, 350);  // Connect to metal
+        ctx.lineTo(300, 550);  // To left edge of metal
+        ctx.lineTo(300, 350);  // Up to connection point
         ctx.stroke();
 
         // Draw Electrodes (connection points to metal)
