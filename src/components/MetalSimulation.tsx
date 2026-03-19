@@ -22,9 +22,9 @@ interface Electron {
   y: number;
   vx: number;
   vy: number;
-  ax: number; // Acceleration X
-  ay: number; // Acceleration Y
-  state: 'metal'; // Simplified to only exist in the lattice
+  ax: number; 
+  ay: number; 
+  state: 'metal'; 
 }
 
 interface Props {
@@ -54,22 +54,33 @@ const CATION_RADIUS = 20;
 const ELECTRON_RADIUS = 5;
 const ROWS = 5;
 const COLS = 8;
-const SPACING_X = CANVAS_WIDTH / (COLS + 1);
-const SPACING_Y = CANVAS_HEIGHT / (ROWS + 1);
-const CIRCUIT_OFFSET_X = 250;
-const CIRCUIT_OFFSET_Y = 120;
 const ELECTRONS_PER_CATION = 1;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+// Bounding box logic to guarantee scaling constraints
+function getSimulationBounds(mode: SimulationMode) {
+  const isCircuit = mode === 'circuit';
+  const circuitMarginY = CANVAS_HEIGHT * 0.075; // 85-90% utilization
+  return isCircuit 
+      ? { 
+          x: CANVAS_WIDTH / 2 - 200, 
+          y: circuitMarginY, 
+          w: 400, 
+          h: 160 
+        } 
+      : { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
+}
+
+// Refactored colors for Scientific Electron Visualization (Light Blue Electron Gas)
 function getElectronFillColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? '#ffffff' : '#22c55e';
+  return theme === 'dark' ? '#bae6fd' : '#38bdf8'; 
 }
 
 function getElectronStrokeColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(21, 128, 61, 0.85)';
+  return theme === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(12, 74, 110, 0.85)';
 }
 
 function getElectronGlyphColor(theme: 'light' | 'dark') {
@@ -77,11 +88,11 @@ function getElectronGlyphColor(theme: 'light' | 'dark') {
 }
 
 function getElectronTrailColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? 'rgba(255, 255, 255, 0.24)' : 'rgba(34, 197, 94, 0.24)';
+  return theme === 'dark' ? 'rgba(186, 230, 253, 0.3)' : 'rgba(56, 189, 248, 0.3)';
 }
 
 function getElectronGlowColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? 'rgba(255, 255, 255, 0.22)' : 'rgba(34, 197, 94, 0.18)';
+  return theme === 'dark' ? 'rgba(186, 230, 253, 0.25)' : 'rgba(56, 189, 248, 0.2)';
 }
 
 function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number }, cations: Cation[]) {
@@ -92,6 +103,7 @@ function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number
     };
   }
 
+  // Free electron gas: randomly spawn in interstitial space near cations
   const cation = cations[Math.floor(Math.random() * cations.length)];
   const angle = Math.random() * Math.PI * 2;
   const radius = CATION_RADIUS * (0.4 + Math.random() * 0.9);
@@ -144,15 +156,15 @@ export default function MetalSimulation({
     frameCount: 0
   });
 
-  // Initialize particles
+  // Physics Initialization
   useEffect(() => {
     const isCircuit = mode === 'circuit';
     const layoutType = isCircuit ? 'circuit' : (mode === 'malleable' ? 'malleable' : 'normal');
     
     if (cationsRef.current.length === 0 || lastLayoutRef.current !== layoutType) {
       lastLayoutRef.current = layoutType;
+      const bounds = getSimulationBounds(mode);
       
-      const bounds = isCircuit ? { x: 180 + CIRCUIT_OFFSET_X, y: 80 + CIRCUIT_OFFSET_Y, w: 400, h: 120 } : { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
       const rows = isCircuit ? 3 : ROWS;
       const cols = isCircuit ? 6 : COLS;
       const spacingX = bounds.w / (cols + 1);
@@ -197,7 +209,6 @@ export default function MetalSimulation({
 
       for (let i = 0; i < metalElectronCount; i++) {
         const pos = spawnMetalElectron(bounds, cations);
-        // Base thermal velocities based on Drude/Fermi models
         const vFermi = 150; 
         const angle = Math.random() * Math.PI * 2;
         electrons.push({
@@ -219,7 +230,7 @@ export default function MetalSimulation({
     if (cationsRef.current.length === 0) return;
     
     const isCircuit = mode === 'circuit';
-    const bounds = isCircuit ? { x: 180 + CIRCUIT_OFFSET_X, y: 80 + CIRCUIT_OFFSET_Y, w: 400, h: 120 } : { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
+    const bounds = getSimulationBounds(mode);
     const rows = isCircuit ? 3 : ROWS;
     const cols = isCircuit ? 6 : COLS;
     
@@ -299,7 +310,7 @@ export default function MetalSimulation({
       const cations = cationsRef.current;
       const electrons = electronsRef.current;
       const isCircuit = mode === 'circuit';
-      const bounds = isCircuit ? { x: 180 + CIRCUIT_OFFSET_X, y: 80 + CIRCUIT_OFFSET_Y, w: 400, h: 120 } : { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
+      const bounds = getSimulationBounds(mode);
 
       let targetZoom = 1;
       let targetCamX = CANVAS_WIDTH / 2;
@@ -352,12 +363,16 @@ export default function MetalSimulation({
       camRef.current.y += (targetCamY - camRef.current.y) * 0.05;
       camRef.current.zoom += (targetZoom - camRef.current.zoom) * 0.05;
 
+      // Substitutional Solid Solution Strengthening Logic
+      // Alloy presence creates friction between atomic planes
+      const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.40; // up to 40% slowdown
+
       if (mode === 'malleable' && autoMalleable) {
-        autoMalleableTime.current += 0.02 * Math.max(0.5, Math.min(autoDemoSpeed, 5));
+        autoMalleableTime.current += 0.02 * Math.max(0.5, Math.min(autoDemoSpeed, 5)) * alloyFrictionFactor;
         const shift = Math.sin(autoMalleableTime.current) * 60;
         
         cations.forEach(c => {
-          const originalBaseX = (c.col + 1) * SPACING_X;
+          const originalBaseX = (c.col + 1) * (bounds.w / (COLS + 1));
           if (c.row <= 1) {
             c.baseX = originalBaseX + shift;
           } else if (c.row === 2) {
@@ -368,24 +383,19 @@ export default function MetalSimulation({
         });
       }
 
-      // -- PHYSICS REFACTOR: Velocity Verlet & Drude Model --
+      // Physics Iteration
       const dt = safeDelta * animationSpeed;
       const isElectric = (mode === 'electrical' || mode === 'circuit');
       
-      // Calculate macroscopic temperatures
       let avgTemp = 0;
       cations.forEach(c => avgTemp += c.temp);
       avgTemp /= cations.length || 1;
       const globalBaseTemp = temperature / 100;
 
-      // Macroscopic Ohm's law values for continuous vector flow
       const circuitResistance = 10 + ((mode === 'heat' ? avgTemp : globalBaseTemp) * 25); 
       const currentMagnitude = isElectric ? (voltage / circuitResistance) : 0; 
-      
-      // Electric field acting on electrons (Force/mass scaling)
       const eFieldForceX = isElectric ? (voltage / 50) * 1200 : 0; 
 
-      // Update Cations
       cations.forEach(c => {
         const lerpSpeed = 0.08;
         c.baseX += (c.targetX - c.baseX) * lerpSpeed;
@@ -394,7 +404,6 @@ export default function MetalSimulation({
         const localTemp = mode === 'heat' ? c.temp : globalBaseTemp;
         const amplitude = 1.5 + localTemp * 8;
         
-        // Lattice vibration 
         c.x = c.baseX + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
         c.y = c.baseY + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
         
@@ -407,15 +416,14 @@ export default function MetalSimulation({
               c.temp = 0;
           }
         } else {
-          c.temp *= Math.pow(0.95, safeDelta); // cool down
+          c.temp *= Math.pow(0.95, safeDelta); 
         }
       });
 
-      // Update Electrons (Drude Model)
-      const baseTau = 0.08; // Base mean free time
+      // Drude Model Implementation
+      const baseTau = 0.08; 
 
       electrons.forEach(e => {
-        // Find local scattering temperature
         let localTemp = globalBaseTemp;
         if (mode === 'heat') {
           let minDist = Infinity;
@@ -425,45 +433,38 @@ export default function MetalSimulation({
           });
         }
 
-        // Drude scattering probability (P = 1 - e^(-dt/tau))
-        // Lattice resistance increases with temp
         const tau = baseTau / (1 + localTemp * 5); 
         const collisionProb = 1 - Math.exp(-dt / tau);
 
-        // Velocity Verlet Step 1: Position update
+        // Velocity Verlet Integration
         e.x += e.vx * dt + 0.5 * e.ax * dt * dt;
         e.y += e.vy * dt + 0.5 * e.ay * dt * dt;
 
-        // Force Fields (Acceleration)
         const newAx = eFieldForceX;
         const newAy = 0;
 
-        // Velocity Verlet Step 2: Velocity update
         e.vx += 0.5 * (e.ax + newAx) * dt;
         e.vy += 0.5 * (e.ay + newAy) * dt;
 
         e.ax = newAx;
         e.ay = newAy;
 
-        // Scattering Event (Electron-Ion collision)
+        // Electron-Lattice Scattering
         if (Math.random() < collisionProb) {
           const vFermi = 150; 
-          const vThermal = vFermi + localTemp * 300; // Thermalize based on temp
+          const vThermal = vFermi + localTemp * 300; 
           const angle = Math.random() * Math.PI * 2;
           
           e.vx = Math.cos(angle) * vThermal;
           e.vy = Math.sin(angle) * vThermal;
         }
 
-        // Boundary handling
         if (mode === 'circuit') {
-          // Continuous loop via wrapping seamlessly
           if (e.x > bounds.x + bounds.w) e.x -= bounds.w;
           if (e.x < bounds.x) e.x += bounds.w;
           if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
           if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
         } else {
-          // Hard boundaries
           if (e.x > bounds.x + bounds.w) { e.x = bounds.x + bounds.w; e.vx *= -1; }
           if (e.x < bounds.x) { e.x = bounds.x; e.vx *= -1; }
           if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
@@ -491,26 +492,39 @@ export default function MetalSimulation({
       }
 
       if (isCircuit) {
-        // Continuous Circuit Vector Field Overhaul
+        // UI scaling bounds for full view
+        const circuitMarginX = CANVAS_WIDTH * 0.075;
+        const circuitMarginY = CANVAS_HEIGHT * 0.075;
+        
+        const wireTopY = bounds.y + bounds.h / 2;
+        const wireBottomY = CANVAS_HEIGHT - circuitMarginY;
+        const wireLeftX = circuitMarginX;
+        const wireRightX = CANVAS_WIDTH - circuitMarginX;
+
         const currentPulseRate = currentMagnitude * 30;
         const dashOffset = -(time / 1000) * currentPulseRate;
-        const currentActiveColor = isLight ? '#22c55e' : '#4ade80';
+        const currentActiveColor = isLight ? '#38bdf8' : '#7dd3fc';
 
         // 1. Draw solid wire casing
         ctx.strokeStyle = isLight ? '#cbd5e1' : '#475569'; 
         ctx.lineWidth = 14;
         ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.moveTo(480 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(330 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); 
-        ctx.moveTo(270 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); 
-        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
+        
+        // Right wire
+        ctx.moveTo(bounds.x + bounds.w, wireTopY);
+        ctx.lineTo(wireRightX, wireTopY);
+        ctx.lineTo(wireRightX, wireBottomY);
+        ctx.lineTo(CANVAS_WIDTH / 2 + 50, wireBottomY);
+        
+        // Left wire
+        ctx.moveTo(CANVAS_WIDTH / 2 - 50, wireBottomY);
+        ctx.lineTo(wireLeftX, wireBottomY);
+        ctx.lineTo(wireLeftX, wireTopY);
+        ctx.lineTo(bounds.x, wireTopY);
         ctx.stroke();
 
-        // 2. Draw Vector Field / Current Flow lines inside the wire
+        // 2. Draw Vector Field inside the wire
         ctx.strokeStyle = voltage > 0 ? currentActiveColor : (isLight ? '#94a3b8' : '#64748b');
         ctx.lineWidth = 4;
         ctx.lineJoin = 'round';
@@ -518,46 +532,47 @@ export default function MetalSimulation({
         ctx.lineDashOffset = dashOffset;
         
         ctx.beginPath();
-        ctx.moveTo(480 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(330 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
+        ctx.moveTo(bounds.x + bounds.w, wireTopY);
+        ctx.lineTo(wireRightX, wireTopY);
+        ctx.lineTo(wireRightX, wireBottomY);
+        ctx.lineTo(CANVAS_WIDTH / 2 + 50, wireBottomY);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.moveTo(270 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); 
-        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
+        ctx.moveTo(CANVAS_WIDTH / 2 - 50, wireBottomY);
+        ctx.lineTo(wireLeftX, wireBottomY);
+        ctx.lineTo(wireLeftX, wireTopY);
+        ctx.lineTo(bounds.x, wireTopY);
         ctx.stroke();
-        ctx.setLineDash([]); // Reset
+        ctx.setLineDash([]);
 
-        // Draw Electrodes
+        // Electrodes
         ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(176 + CIRCUIT_OFFSET_X, 80 + CIRCUIT_OFFSET_Y, 8, 120);
-        ctx.fillRect(476 + CIRCUIT_OFFSET_X, 80 + CIRCUIT_OFFSET_Y, 8, 120);
+        ctx.fillRect(bounds.x - 4, bounds.y, 8, bounds.h);
+        ctx.fillRect(bounds.x + bounds.w - 4, bounds.y, 8, bounds.h);
 
-        // Draw Battery
+        // Battery
         ctx.fillStyle = '#334155';
-        ctx.fillRect(250 + CIRCUIT_OFFSET_X, 340 + CIRCUIT_OFFSET_Y, 100, 40); 
-        ctx.fillStyle = '#ef4444'; // positive
-        ctx.fillRect(350 + CIRCUIT_OFFSET_X, 350 + CIRCUIT_OFFSET_Y, 10, 20);
-        ctx.fillStyle = '#cbd5e1'; // negative
-        ctx.fillRect(240 + CIRCUIT_OFFSET_X, 350 + CIRCUIT_OFFSET_Y, 10, 20);
+        ctx.fillRect(CANVAS_WIDTH / 2 - 50, wireBottomY - 20, 100, 40); 
+        ctx.fillStyle = '#ef4444'; 
+        ctx.fillRect(CANVAS_WIDTH / 2 + 50, wireBottomY - 10, 10, 20);
+        ctx.fillStyle = '#cbd5e1'; 
+        ctx.fillRect(CANVAS_WIDTH / 2 - 60, wireBottomY - 10, 10, 20);
         
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 14px Inter';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('BATTERY', 300 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
+        ctx.fillText('BATTERY', CANVAS_WIDTH / 2, wireBottomY);
         ctx.font = 'bold 18px Inter';
-        ctx.fillText('+', 345 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
-        ctx.fillText('-', 255 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
+        ctx.fillText('+', CANVAS_WIDTH / 2 + 40, wireBottomY);
+        ctx.fillText('-', CANVAS_WIDTH / 2 - 40, wireBottomY);
 
-        // Draw Light Bulb
-        const bulbIntensity = Math.min(1, currentMagnitude / 3.5); // Normalize brightness
+        // Light Bulb
+        const bulbIntensity = Math.min(1, currentMagnitude / 3.5); 
         ctx.fillStyle = `rgba(251, 191, 36, ${0.1 + bulbIntensity * 0.9})`; 
         ctx.beginPath();
-        ctx.arc(580 + CIRCUIT_OFFSET_X, 280 + CIRCUIT_OFFSET_Y, 24, 0, Math.PI * 2); 
+        ctx.arc(wireRightX, wireTopY + (wireBottomY - wireTopY) / 2, 24, 0, Math.PI * 2); 
         ctx.fill();
         ctx.shadowColor = '#fbbf24';
         ctx.shadowBlur = 10 + bulbIntensity * 40;
@@ -565,7 +580,7 @@ export default function MetalSimulation({
         ctx.shadowBlur = 0;
         
         ctx.fillStyle = '#64748b';
-        ctx.fillRect(570 + CIRCUIT_OFFSET_X, 304 + CIRCUIT_OFFSET_Y, 20, 18);
+        ctx.fillRect(wireRightX - 10, wireTopY + (wireBottomY - wireTopY) / 2 + 24, 20, 18);
 
         // Metal Background
         const metalBgColor = isLight ? '#e2e8f0' : '#0f172a';
@@ -575,10 +590,9 @@ export default function MetalSimulation({
         ctx.lineWidth = 2;
         ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
         
-        // Internal Vector Field Overlay for Metal
         if (voltage > 0) {
            const spacing = 35;
-           ctx.strokeStyle = `rgba(34, 197, 94, ${Math.min(0.6, currentMagnitude * 0.15)})`;
+           ctx.strokeStyle = `rgba(56, 189, 248, ${Math.min(0.6, currentMagnitude * 0.15)})`;
            ctx.lineWidth = 2;
            for (let x = bounds.x + spacing/2; x < bounds.x + bounds.w; x += spacing) {
                for (let y = bounds.y + spacing/2; y < bounds.y + bounds.h; y += spacing) {
@@ -606,7 +620,7 @@ export default function MetalSimulation({
         let labelText = '+';
         
         if (c.isAlloyB) {
-          cationRadius = CATION_RADIUS * 1.15; 
+          cationRadius = CATION_RADIUS * 1.15; // 15% larger for solid solution
           if (c.temp > 0.01) {
             const r = 245;
             const g = Math.floor(158 + c.temp * 97);
@@ -784,7 +798,10 @@ export default function MetalSimulation({
     const scaleX = canvas.width / rect.width;
     
     const x = (e.clientX - rect.left) * scaleX;
-    const dx = x - dragState.current.dragStartX;
+    
+    // Substitutional Solid Solution Strengthening Logic
+    const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.40; // Harder to move
+    const dx = (x - dragState.current.dragStartX) * alloyFrictionFactor;
     dragState.current.dragStartX = x;
     
     cationsRef.current.forEach(c => {
