@@ -3,6 +3,12 @@ import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 
 export type SimulationMode = 'normal' | 'malleable' | 'electrical' | 'heat' | 'circuit';
 
+interface CoreElectron {
+  angle: number;
+  orbitRadius: number;
+  angularVelocity: number;
+}
+
 interface Cation {
   id: number;
   baseX: number;
@@ -15,9 +21,10 @@ interface Cation {
   col: number;
   temp: number;
   isAlloyB: boolean; 
-  alloyThreshold: number; // 0-100 value determining at what mix % this becomes Metal B
-  seedX: number; // Random value between -0.5 and 0.5 for lattice distortion
-  seedY: number; // Random value between -0.5 and 0.5 for lattice distortion
+  alloyThreshold: number; 
+  seedX: number; 
+  seedY: number; 
+  coreElectrons: CoreElectron[]; // Bound inner-shell electrons
 }
 
 interface Electron {
@@ -27,7 +34,7 @@ interface Electron {
   vy: number;
   ax: number; 
   ay: number; 
-  state: 'metal'; // Delocalized conduction electrons
+  state: 'metal'; // Delocalized valence/conduction electrons
 }
 
 interface Props {
@@ -58,7 +65,10 @@ const ELECTRON_RADIUS = 4;
 const ROWS = 5;
 const COLS = 8;
 
-const DELOCALIZED_ELECTRONS_PER_CATION = 2; // Increased to compensate for removal of core electrons, forming a denser "sea"
+// Scientific Proportion (Scaled down for UI performance)
+// e.g., representing a transition metal: 1 free valence electron per 6 bound core electrons
+const DELOCALIZED_ELECTRONS_PER_CATION = 1;
+const CORE_ELECTRONS_PER_CATION = 6;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -73,7 +83,6 @@ function getSimulationBounds(mode: SimulationMode) {
     const availableW = CANVAS_WIDTH - (circuitMarginX * 2);
     const availableH = CANVAS_HEIGHT - (circuitMarginY * 2);
     
-    // Metal sample occupies roughly 65% of the inner circuit space
     const sampleW = availableW * 0.65;
     const sampleH = availableH * 0.60;
     
@@ -88,12 +97,17 @@ function getSimulationBounds(mode: SimulationMode) {
   return { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
 }
 
+// Visual mapping strictly adhering to the requirements
+function getCoreElectronColor(theme: 'light' | 'dark') {
+  return theme === 'dark' ? '#ffffff' : '#22c55e'; // White in Dark Mode, Green in Light Mode
+}
+
 function getDelocalizedElectronColor() {
   return '#38bdf8'; // Always Light Blue (Tailwind sky-400)
 }
 
 function getDelocalizedElectronGlowColor() {
-  return 'rgba(56, 189, 248, 0.4)'; // Light Blue Glow
+  return 'rgba(56, 189, 248, 0.4)'; 
 }
 
 function getElectronTrailColor(theme: 'light' | 'dark') {
@@ -108,7 +122,6 @@ function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number
     };
   }
 
-  // Free electron gas: randomly spawn in interstitial space near cations
   const cation = cations[Math.floor(Math.random() * cations.length)];
   const angle = Math.random() * Math.PI * 2;
   const radius = CATION_RADIUS * (0.8 + Math.random() * 1.5);
@@ -181,6 +194,16 @@ export default function MetalSimulation({
           const baseX = bounds.x + (c + 1) * spacingX;
           const baseY = bounds.y + (r + 1) * spacingY;
 
+          // Generate Core Electrons bound to this specific nucleus
+          const coreElectrons: CoreElectron[] = [];
+          for (let ce = 0; ce < CORE_ELECTRONS_PER_CATION; ce++) {
+             coreElectrons.push({
+               angle: (Math.PI * 2 / CORE_ELECTRONS_PER_CATION) * ce + Math.random(),
+               orbitRadius: (CATION_RADIUS * 0.4) + Math.random() * (CATION_RADIUS * 0.4),
+               angularVelocity: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random() * 2)
+             });
+          }
+
           cations.push({
             id: id++,
             baseX: baseX,
@@ -193,9 +216,10 @@ export default function MetalSimulation({
             col: c,
             temp: 0,
             isAlloyB: false,
-            alloyThreshold: Math.random() * 100, // Fixed random value for smooth slider transition
+            alloyThreshold: Math.random() * 100, 
             seedX: Math.random() - 0.5,
             seedY: Math.random() - 0.5,
+            coreElectrons
           });
         }
       }
@@ -237,17 +261,15 @@ export default function MetalSimulation({
     
     const spacingX = bounds.w / (cols + 1);
     const spacingY = bounds.h / (rows + 1);
-    const maxDistortion = Math.min(spacingX, spacingY) * 0.6; // Allow up to 60% displacement offset 
+    const maxDistortion = Math.min(spacingX, spacingY) * 0.6; 
     
     if (lastCrystalStructureRef.current !== crystalStructure) {
       lastCrystalStructureRef.current = crystalStructure;
     }
     
     cationsRef.current.forEach(c => {
-      // 1. Determine Identity based on slider
       c.isAlloyB = c.alloyThreshold < alloyMix;
 
-      // 2. Base Ideal Crystal Coordinates
       let perfectX = bounds.x + (c.col + 1) * spacingX;
       let perfectY = bounds.y + (c.row + 1) * spacingY;
 
@@ -262,35 +284,12 @@ export default function MetalSimulation({
         perfectY += verticalStagger;
       }
 
-      // 3. Apply Lattice Distortion based on Alloy Mix
-      // At 0% (pure metal), distortionAmount is 0. 
-      // At higher %, atoms push and pull against each other out of alignment.
       const distortionAmount = (alloyMix / 100) * maxDistortion;
       
       c.targetX = perfectX + c.seedX * distortionAmount;
       c.targetY = perfectY + c.seedY * distortionAmount;
     });
   }, [crystalStructure, mode, alloyMix]);
-
-  // Recording State Handlers
-  useEffect(() => {
-    if (isRecording && !gifState.current.encoder) {
-      gifState.current.encoder = GIFEncoder();
-      gifState.current.frameCount = 0;
-      onRecordingProgress?.(0);
-      
-      if (mode === 'heat') {
-        heatTimeRef.current = 0;
-        cationsRef.current.forEach(c => c.temp = 0);
-      }
-    } else if (!isRecording && gifState.current.encoder) {
-      gifState.current.encoder.finish();
-      const buffer = gifState.current.encoder.bytesView();
-      const blob = new Blob([buffer], { type: 'image/gif' });
-      onRecordingComplete?.(blob);
-      gifState.current.encoder = null;
-    }
-  }, [isRecording, onRecordingComplete, onRecordingProgress, mode]);
 
   // Main Simulation Loop
   useEffect(() => {
@@ -314,63 +313,28 @@ export default function MetalSimulation({
       let targetZoom = 1;
       let targetCamX = CANVAS_WIDTH / 2;
       let targetCamY = CANVAS_HEIGHT / 2;
-      let overlayTitle = "";
-      let overlayText = "";
 
       if (mode === 'heat') {
         heatTimeRef.current += safeDelta;
-        const totalDuration = 24;
-        if (heatTimeRef.current > totalDuration) {
+        if (heatTimeRef.current > 24) {
           heatTimeRef.current = 0;
           cations.forEach(c => c.temp = 0);
         }
-
-        const t = heatTimeRef.current;
-        if (t < 4) {
-          overlayTitle = "1. Heat Source Applied";
-          overlayText = "Heat energy is applied to the left side of the metal.";
-        } else if (t < 9) {
-          targetZoom = 3.5;
-          targetCamX = cations[0].x;
-          targetCamY = cations[0].y;
-          overlayTitle = "2. Metal Cations Vibrate";
-          overlayText = "Cations absorb energy and vibrate vigorously in their fixed lattice positions.";
-        } else if (t < 14) {
-          targetZoom = 4;
-          targetCamX = cations[0].x + SPACING_X / 2;
-          targetCamY = cations[0].y + (bounds.h / (ROWS + 1)) / 2;
-          overlayTitle = "3. Delocalized Electrons";
-          overlayText = "Free electrons gain kinetic energy and zip around much faster.";
-        } else if (t < 19) {
-          targetZoom = 1.8;
-          targetCamX = CANVAS_WIDTH / 2;
-          targetCamY = CANVAS_HEIGHT / 2;
-          overlayTitle = "4. Energy Transfer";
-          overlayText = "Fast electrons collide with other particles, rapidly spreading heat across the metal.";
-        } else {
-          overlayTitle = "High Heat Conductivity";
-          overlayText = "This dual-action (vibrating cations + mobile electrons) makes metals excellent conductors.";
-        }
       } else {
         heatTimeRef.current = 0;
-        targetZoom = 1;
-        targetCamX = CANVAS_WIDTH / 2;
-        targetCamY = CANVAS_HEIGHT / 2;
       }
 
       camRef.current.x += (targetCamX - camRef.current.x) * 0.05;
       camRef.current.y += (targetCamY - camRef.current.y) * 0.05;
       camRef.current.zoom += (targetZoom - camRef.current.zoom) * 0.05;
 
-      // Substitutional Solid Solution Strengthening Logic
-      const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.60; // Up to 60% mechanical slow-down due to internal distortion
+      const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.60; 
 
       if (mode === 'malleable' && autoMalleable) {
         autoMalleableTime.current += 0.02 * Math.max(0.5, Math.min(autoDemoSpeed, 5)) * alloyFrictionFactor;
         const shift = Math.sin(autoMalleableTime.current) * 60;
         
         cations.forEach(c => {
-          // Temporarily override targetX for demonstration
           const currentIdealX = c.targetX; 
           if (c.row <= 1) {
             c.baseX = currentIdealX + shift;
@@ -408,6 +372,13 @@ export default function MetalSimulation({
         // Cation Vibration
         c.x = c.baseX + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
         c.y = c.baseY + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
+
+        // Core Electrons Kinematics
+        c.coreElectrons.forEach(ce => {
+            // Speed up orbit slightly based on temperature
+            const tempMultiplier = 1 + (localTemp * 2);
+            ce.angle += ce.angularVelocity * dt * tempMultiplier;
+        });
 
         if (mode === 'heat') {
           const t = heatTimeRef.current;
@@ -461,7 +432,7 @@ export default function MetalSimulation({
           e.vy = Math.sin(angle) * vThermal;
         }
 
-        // Circuit Boundary Wrapping vs Box Collision
+        // Boundary Wrap/Collision
         if (mode === 'circuit') {
           if (e.x > bounds.x + bounds.w) e.x -= bounds.w;
           if (e.x < bounds.x) e.x += bounds.w;
@@ -503,11 +474,12 @@ export default function MetalSimulation({
         const wireLeftX = circuitMarginX;
         const wireRightX = CANVAS_WIDTH - circuitMarginX;
 
-        const currentPulseRate = currentMagnitude * 30;
+        const currentPulseRate = currentMagnitude * 40; // Sped up the visual flow
         const dashOffset = -(time / 1000) * currentPulseRate;
-        const currentActiveColor = isLight ? 'rgba(56, 189, 248, 0.9)' : 'rgba(125, 211, 252, 0.9)'; 
+        const currentActiveColor = isLight ? '#0ea5e9' : '#38bdf8'; 
         const wireColor = isLight ? '#cbd5e1' : '#475569';
 
+        // Base Wire
         ctx.strokeStyle = wireColor; 
         ctx.lineWidth = 14;
         ctx.lineJoin = 'round';
@@ -524,12 +496,16 @@ export default function MetalSimulation({
         ctx.lineTo(bounds.x, wireTopY);
         ctx.stroke();
 
+        // Pulsing/Moving Current Line (Restored to visibly move through the wire)
         if (voltage > 0) {
             ctx.strokeStyle = currentActiveColor;
-            ctx.lineWidth = 4 + (currentMagnitude * 1.5); 
+            ctx.lineWidth = 6; 
             ctx.lineJoin = 'round';
+            ctx.setLineDash([15, 25]); // Clear dashed segments
+            ctx.lineDashOffset = dashOffset; // Driven by time to visibly march
+            
             ctx.shadowColor = getDelocalizedElectronColor();
-            ctx.shadowBlur = 10 + currentMagnitude * 20;
+            ctx.shadowBlur = 10 + currentMagnitude * 15;
 
             ctx.beginPath();
             ctx.moveTo(bounds.x + bounds.w, wireTopY);
@@ -545,13 +521,16 @@ export default function MetalSimulation({
             ctx.lineTo(bounds.x, wireTopY);
             ctx.stroke();
             
+            ctx.setLineDash([]); // Reset dash
             ctx.shadowBlur = 0; 
         }
 
+        // Electrodes
         ctx.fillStyle = '#94a3b8';
         ctx.fillRect(bounds.x - 4, bounds.y, 8, bounds.h);
         ctx.fillRect(bounds.x + bounds.w - 4, bounds.y, 8, bounds.h);
 
+        // Battery
         ctx.fillStyle = '#334155';
         ctx.fillRect(CANVAS_WIDTH / 2 - 50, wireBottomY - 20, 100, 40); 
         ctx.fillStyle = '#ef4444'; 
@@ -568,6 +547,7 @@ export default function MetalSimulation({
         ctx.fillText('+', CANVAS_WIDTH / 2 + 40, wireBottomY);
         ctx.fillText('-', CANVAS_WIDTH / 2 - 40, wireBottomY);
 
+        // Light Bulb
         const bulbIntensity = Math.min(1, currentMagnitude / 3.5); 
         ctx.fillStyle = `rgba(251, 191, 36, ${0.1 + bulbIntensity * 0.9})`; 
         ctx.beginPath();
@@ -590,7 +570,9 @@ export default function MetalSimulation({
       ctx.lineWidth = 2;
       ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
 
-      // Draw Cations
+      // Draw Cations and Core Electrons
+      const coreColor = getCoreElectronColor(theme);
+
       cations.forEach(c => {
         let cationRadius = CATION_RADIUS;
         let fillColor = '#ef4444'; 
@@ -629,6 +611,16 @@ export default function MetalSimulation({
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(labelText, c.x, c.y);
+
+        // Draw Bound Core Electrons
+        ctx.fillStyle = coreColor;
+        c.coreElectrons.forEach(ce => {
+            const ex = c.x + Math.cos(ce.angle) * ce.orbitRadius;
+            const ey = c.y + Math.sin(ce.angle) * ce.orbitRadius;
+            ctx.beginPath();
+            ctx.arc(ex, ey, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        });
       });
 
       // Draw Delocalized Electron Trails
@@ -680,43 +672,11 @@ export default function MetalSimulation({
         ctx.arc(e.x, e.y, ELECTRON_RADIUS, 0, Math.PI * 2);
         ctx.fillStyle = delocFillColor;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(12, 74, 110, 0.9)'; 
-        ctx.lineWidth = 1;
-        ctx.stroke();
         
-        ctx.fillStyle = '#0f172a';
-        ctx.font = '10px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('-', e.x, e.y);
         ctx.restore();
       });
 
       ctx.restore();
-
-      // Overlay text for Heat Mode
-      if (mode === 'heat' && overlayTitle) {
-        ctx.fillStyle = isLight ? 'rgba(241, 245, 249, 0.95)' : 'rgba(15, 23, 42, 0.85)';
-        ctx.fillRect(20, CANVAS_HEIGHT - 80, CANVAS_WIDTH - 40, 60);  
-        ctx.strokeStyle = isLight ? '#cbd5e1' : '#334155';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(20, CANVAS_HEIGHT - 80, CANVAS_WIDTH - 40, 60);
-
-        ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc';
-        ctx.font = 'bold 15px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText(overlayTitle, 40, CANVAS_HEIGHT - 70);
-
-        ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'; 
-        ctx.font = '13px Inter, sans-serif';
-        ctx.fillText(overlayText, 40, CANVAS_HEIGHT - 48, CANVAS_WIDTH - 80);
-        
-        const totalDuration = 24; 
-        const progress = (heatTimeRef.current % totalDuration) / totalDuration;
-        ctx.fillStyle = '#ef4444'; 
-        ctx.fillRect(20, CANVAS_HEIGHT - 20, (CANVAS_WIDTH - 40) * progress, 3);
-      }
 
       // Handle GIF Recording
       if (isRecording && gifState.current.encoder) {
