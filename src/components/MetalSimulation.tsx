@@ -3,6 +3,12 @@ import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 
 export type SimulationMode = 'normal' | 'malleable' | 'electrical' | 'heat' | 'circuit';
 
+interface CoreElectron {
+  angle: number;
+  orbitRadius: number;
+  angularVelocity: number;
+}
+
 interface Cation {
   id: number;
   baseX: number;
@@ -15,6 +21,7 @@ interface Cation {
   col: number;
   temp: number;
   isAlloyB: boolean; 
+  coreElectrons: CoreElectron[]; // Bound to the nucleus
 }
 
 interface Electron {
@@ -24,7 +31,7 @@ interface Electron {
   vy: number;
   ax: number; 
   ay: number; 
-  state: 'metal'; 
+  state: 'metal'; // Delocalized conduction electrons
 }
 
 interface Props {
@@ -50,49 +57,57 @@ interface Props {
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 800;
 const MAX_RECORD_FRAMES = 480; 
-const CATION_RADIUS = 20;
-const ELECTRON_RADIUS = 5;
+const CATION_RADIUS = 22;
+const ELECTRON_RADIUS = 4;
 const ROWS = 5;
 const COLS = 8;
-const ELECTRONS_PER_CATION = 1;
+
+// Scientific proportion scaling (e.g., representing Copper Z=29)
+// Scaled 1:4 to maintain performance while preserving mathematical ratios
+// 1 valence electron : 7 core electrons (representing the 28 bound electrons)
+const DELOCALIZED_ELECTRONS_PER_CATION = 1;
+const CORE_ELECTRONS_PER_CATION = 7;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-// Bounding box logic to guarantee scaling constraints
+// Bounding box logic to guarantee scaling constraints (60-70% volume utilization in circuit mode)
 function getSimulationBounds(mode: SimulationMode) {
   const isCircuit = mode === 'circuit';
-  const circuitMarginY = CANVAS_HEIGHT * 0.075; // 85-90% utilization
-  return isCircuit 
-      ? { 
-          x: CANVAS_WIDTH / 2 - 200, 
-          y: circuitMarginY, 
-          w: 400, 
-          h: 160 
-        } 
-      : { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
+  
+  if (isCircuit) {
+    const circuitMarginX = CANVAS_WIDTH * 0.075;
+    const circuitMarginY = CANVAS_HEIGHT * 0.075;
+    const availableW = CANVAS_WIDTH - (circuitMarginX * 2);
+    const availableH = CANVAS_HEIGHT - (circuitMarginY * 2);
+    
+    // Metal sample occupies roughly 65% of the inner circuit space
+    const sampleW = availableW * 0.65;
+    const sampleH = availableH * 0.60;
+    
+    return { 
+      x: CANVAS_WIDTH / 2 - sampleW / 2, 
+      y: circuitMarginY, 
+      w: sampleW, 
+      h: sampleH 
+    };
+  }
+  
+  return { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
 }
 
-// Refactored colors for Scientific Electron Visualization (Light Blue Electron Gas)
-function getElectronFillColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? '#bae6fd' : '#38bdf8'; 
+// Visual mapping strictly adhering to the requirements
+function getCoreElectronColor(theme: 'light' | 'dark') {
+  return theme === 'dark' ? '#ffffff' : '#22c55e'; // White in dark mode, Green in light mode
 }
 
-function getElectronStrokeColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(12, 74, 110, 0.85)';
+function getDelocalizedElectronColor() {
+  return '#38bdf8'; // Always Light Blue (Tailwind sky-400)
 }
 
-function getElectronGlyphColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? '#0f172a' : '#f8fafc';
-}
-
-function getElectronTrailColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? 'rgba(186, 230, 253, 0.3)' : 'rgba(56, 189, 248, 0.3)';
-}
-
-function getElectronGlowColor(theme: 'light' | 'dark') {
-  return theme === 'dark' ? 'rgba(186, 230, 253, 0.25)' : 'rgba(56, 189, 248, 0.2)';
+function getDelocalizedElectronGlowColor() {
+  return 'rgba(56, 189, 248, 0.4)'; // Light Blue Glow
 }
 
 function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number }, cations: Cation[]) {
@@ -106,7 +121,7 @@ function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number
   // Free electron gas: randomly spawn in interstitial space near cations
   const cation = cations[Math.floor(Math.random() * cations.length)];
   const angle = Math.random() * Math.PI * 2;
-  const radius = CATION_RADIUS * (0.4 + Math.random() * 0.9);
+  const radius = CATION_RADIUS * (0.8 + Math.random() * 1.5);
 
   return {
     x: clamp(cation.baseX + Math.cos(angle) * radius, bounds.x + 8, bounds.x + bounds.w - 8),
@@ -165,8 +180,9 @@ export default function MetalSimulation({
       lastLayoutRef.current = layoutType;
       const bounds = getSimulationBounds(mode);
       
-      const rows = isCircuit ? 3 : ROWS;
-      const cols = isCircuit ? 6 : COLS;
+      // Determine optimal grid density based on sample volume
+      const rows = isCircuit ? 4 : ROWS;
+      const cols = isCircuit ? 9 : COLS;
       const spacingX = bounds.w / (cols + 1);
       const spacingY = bounds.h / (rows + 1);
 
@@ -176,6 +192,17 @@ export default function MetalSimulation({
         for (let c = 0; c < cols; c++) {
           const baseX = bounds.x + (c + 1) * spacingX;
           const baseY = bounds.y + (r + 1) * spacingY;
+          
+          // Generate Core Electrons bound to this specific nucleus
+          const coreElectrons: CoreElectron[] = [];
+          for (let ce = 0; ce < CORE_ELECTRONS_PER_CATION; ce++) {
+             coreElectrons.push({
+               angle: Math.random() * Math.PI * 2,
+               orbitRadius: (CATION_RADIUS * 0.3) + Math.random() * (CATION_RADIUS * 0.5),
+               angularVelocity: (Math.random() - 0.5) * 10 + 2
+             });
+          }
+
           cations.push({
             id: id++,
             baseX: baseX,
@@ -188,6 +215,7 @@ export default function MetalSimulation({
             col: c,
             temp: 0,
             isAlloyB: false,
+            coreElectrons
           });
         }
       }
@@ -201,15 +229,16 @@ export default function MetalSimulation({
         }
       }
 
+      // Generate Delocalized Electron Gas
       const electrons: Electron[] = [];
       const metalElectronCount = Math.max(
         cations.length,
-        Math.round(cations.length * ELECTRONS_PER_CATION)
+        Math.round(cations.length * DELOCALIZED_ELECTRONS_PER_CATION)
       );
 
       for (let i = 0; i < metalElectronCount; i++) {
         const pos = spawnMetalElectron(bounds, cations);
-        const vFermi = 150; 
+        const vFermi = 200; // High baseline Fermi velocity 
         const angle = Math.random() * Math.PI * 2;
         electrons.push({
           x: pos.x,
@@ -231,8 +260,8 @@ export default function MetalSimulation({
     
     const isCircuit = mode === 'circuit';
     const bounds = getSimulationBounds(mode);
-    const rows = isCircuit ? 3 : ROWS;
-    const cols = isCircuit ? 6 : COLS;
+    const rows = isCircuit ? 4 : ROWS;
+    const cols = isCircuit ? 9 : COLS;
     
     const spacingX = bounds.w / (cols + 1);
     const spacingY = bounds.h / (rows + 1);
@@ -339,7 +368,7 @@ export default function MetalSimulation({
         } else if (t < 14) {
           targetZoom = 4;
           targetCamX = cations[0].x + SPACING_X / 2;
-          targetCamY = cations[0].y + SPACING_Y / 2;
+          targetCamY = cations[0].y + (bounds.h / (ROWS + 1)) / 2;
           overlayTitle = "3. Delocalized Electrons";
           overlayText = "Free electrons gain kinetic energy and zip around much faster.";
         } else if (t < 19) {
@@ -364,8 +393,8 @@ export default function MetalSimulation({
       camRef.current.zoom += (targetZoom - camRef.current.zoom) * 0.05;
 
       // Substitutional Solid Solution Strengthening Logic
-      // Alloy presence creates friction between atomic planes
-      const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.40; // up to 40% slowdown
+      // Radius mismatch increases layer friction
+      const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.50; // up to 50% slowdown
 
       if (mode === 'malleable' && autoMalleable) {
         autoMalleableTime.current += 0.02 * Math.max(0.5, Math.min(autoDemoSpeed, 5)) * alloyFrictionFactor;
@@ -394,7 +423,7 @@ export default function MetalSimulation({
 
       const circuitResistance = 10 + ((mode === 'heat' ? avgTemp : globalBaseTemp) * 25); 
       const currentMagnitude = isElectric ? (voltage / circuitResistance) : 0; 
-      const eFieldForceX = isElectric ? (voltage / 50) * 1200 : 0; 
+      const eFieldForceX = isElectric ? (voltage / 50) * 1500 : 0; 
 
       cations.forEach(c => {
         const lerpSpeed = 0.08;
@@ -404,9 +433,15 @@ export default function MetalSimulation({
         const localTemp = mode === 'heat' ? c.temp : globalBaseTemp;
         const amplitude = 1.5 + localTemp * 8;
         
+        // Cation Vibration
         c.x = c.baseX + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
         c.y = c.baseY + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
         
+        // Update Core Electrons
+        c.coreElectrons.forEach(ce => {
+            ce.angle += ce.angularVelocity * dt;
+        });
+
         if (mode === 'heat') {
           const t = heatTimeRef.current;
           const delay = c.col * 1.5; 
@@ -420,7 +455,7 @@ export default function MetalSimulation({
         }
       });
 
-      // Drude Model Implementation
+      // Drude Model Implementation for Delocalized Electron Gas
       const baseTau = 0.08; 
 
       electrons.forEach(e => {
@@ -451,14 +486,15 @@ export default function MetalSimulation({
 
         // Electron-Lattice Scattering
         if (Math.random() < collisionProb) {
-          const vFermi = 150; 
-          const vThermal = vFermi + localTemp * 300; 
+          const vFermi = 200; 
+          const vThermal = vFermi + localTemp * 400; 
           const angle = Math.random() * Math.PI * 2;
           
           e.vx = Math.cos(angle) * vThermal;
           e.vy = Math.sin(angle) * vThermal;
         }
 
+        // Circuit Boundary Wrapping vs Box Collision
         if (mode === 'circuit') {
           if (e.x > bounds.x + bounds.w) e.x -= bounds.w;
           if (e.x < bounds.x) e.x += bounds.w;
@@ -492,7 +528,6 @@ export default function MetalSimulation({
       }
 
       if (isCircuit) {
-        // UI scaling bounds for full view
         const circuitMarginX = CANVAS_WIDTH * 0.075;
         const circuitMarginY = CANVAS_HEIGHT * 0.075;
         
@@ -501,50 +536,53 @@ export default function MetalSimulation({
         const wireLeftX = circuitMarginX;
         const wireRightX = CANVAS_WIDTH - circuitMarginX;
 
-        const currentPulseRate = currentMagnitude * 30;
-        const dashOffset = -(time / 1000) * currentPulseRate;
-        const currentActiveColor = isLight ? '#38bdf8' : '#7dd3fc';
+        // Current Density Field Gradient
+        const currentActiveColor = isLight ? 'rgba(56, 189, 248, 0.9)' : 'rgba(125, 211, 252, 0.9)'; // Sky blue current line
+        const wireColor = isLight ? '#cbd5e1' : '#475569';
 
-        // 1. Draw solid wire casing
-        ctx.strokeStyle = isLight ? '#cbd5e1' : '#475569'; 
+        // Draw solid wire casing
+        ctx.strokeStyle = wireColor; 
         ctx.lineWidth = 14;
         ctx.lineJoin = 'round';
         ctx.beginPath();
         
-        // Right wire
+        // Right wire path
         ctx.moveTo(bounds.x + bounds.w, wireTopY);
         ctx.lineTo(wireRightX, wireTopY);
         ctx.lineTo(wireRightX, wireBottomY);
         ctx.lineTo(CANVAS_WIDTH / 2 + 50, wireBottomY);
         
-        // Left wire
+        // Left wire path
         ctx.moveTo(CANVAS_WIDTH / 2 - 50, wireBottomY);
         ctx.lineTo(wireLeftX, wireBottomY);
         ctx.lineTo(wireLeftX, wireTopY);
         ctx.lineTo(bounds.x, wireTopY);
         ctx.stroke();
 
-        // 2. Draw Vector Field inside the wire
-        ctx.strokeStyle = voltage > 0 ? currentActiveColor : (isLight ? '#94a3b8' : '#64748b');
-        ctx.lineWidth = 4;
-        ctx.lineJoin = 'round';
-        ctx.setLineDash([15, 20]);
-        ctx.lineDashOffset = dashOffset;
-        
-        ctx.beginPath();
-        ctx.moveTo(bounds.x + bounds.w, wireTopY);
-        ctx.lineTo(wireRightX, wireTopY);
-        ctx.lineTo(wireRightX, wireBottomY);
-        ctx.lineTo(CANVAS_WIDTH / 2 + 50, wireBottomY);
-        ctx.stroke();
+        // Draw Current Vector Field Overlay (Glowing Solid Line indicating flow strength)
+        if (voltage > 0) {
+            ctx.strokeStyle = currentActiveColor;
+            ctx.lineWidth = 4 + (currentMagnitude * 1.5); // Thickness indicates strength
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = getDelocalizedElectronColor();
+            ctx.shadowBlur = 10 + currentMagnitude * 20;
 
-        ctx.beginPath();
-        ctx.moveTo(CANVAS_WIDTH / 2 - 50, wireBottomY);
-        ctx.lineTo(wireLeftX, wireBottomY);
-        ctx.lineTo(wireLeftX, wireTopY);
-        ctx.lineTo(bounds.x, wireTopY);
-        ctx.stroke();
-        ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(bounds.x + bounds.w, wireTopY);
+            ctx.lineTo(wireRightX, wireTopY);
+            ctx.lineTo(wireRightX, wireBottomY);
+            ctx.lineTo(CANVAS_WIDTH / 2 + 50, wireBottomY);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(CANVAS_WIDTH / 2 - 50, wireBottomY);
+            ctx.lineTo(wireLeftX, wireBottomY);
+            ctx.lineTo(wireLeftX, wireTopY);
+            ctx.lineTo(bounds.x, wireTopY);
+            ctx.stroke();
+            
+            ctx.shadowBlur = 0; // Reset
+        }
 
         // Electrodes
         ctx.fillStyle = '#94a3b8';
@@ -572,55 +610,37 @@ export default function MetalSimulation({
         const bulbIntensity = Math.min(1, currentMagnitude / 3.5); 
         ctx.fillStyle = `rgba(251, 191, 36, ${0.1 + bulbIntensity * 0.9})`; 
         ctx.beginPath();
-        ctx.arc(wireRightX, wireTopY + (wireBottomY - wireTopY) / 2, 24, 0, Math.PI * 2); 
+        ctx.arc(wireRightX, wireTopY + (wireBottomY - wireTopY) / 2, 28, 0, Math.PI * 2); 
         ctx.fill();
         ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 10 + bulbIntensity * 40;
+        ctx.shadowBlur = 10 + bulbIntensity * 50;
         ctx.fill();
         ctx.shadowBlur = 0;
         
         ctx.fillStyle = '#64748b';
-        ctx.fillRect(wireRightX - 10, wireTopY + (wireBottomY - wireTopY) / 2 + 24, 20, 18);
-
-        // Metal Background
-        const metalBgColor = isLight ? '#e2e8f0' : '#0f172a';
-        ctx.fillStyle = metalBgColor;
-        ctx.fillRect(bounds.x, bounds.y, bounds.w, bounds.h);
-        ctx.strokeStyle = isLight ? '#cbd5e1' : '#334155';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
-        
-        if (voltage > 0) {
-           const spacing = 35;
-           ctx.strokeStyle = `rgba(56, 189, 248, ${Math.min(0.6, currentMagnitude * 0.15)})`;
-           ctx.lineWidth = 2;
-           for (let x = bounds.x + spacing/2; x < bounds.x + bounds.w; x += spacing) {
-               for (let y = bounds.y + spacing/2; y < bounds.y + bounds.h; y += spacing) {
-                   const offset = ((time / 1000) * currentPulseRate + x) % spacing;
-                   const arrowX = bounds.x + offset + Math.floor((x - bounds.x) / spacing) * spacing;
-                   if (arrowX > bounds.x + bounds.w - 10) continue;
-
-                   ctx.beginPath();
-                   ctx.moveTo(arrowX - 5, y);
-                   ctx.lineTo(arrowX + 5, y);
-                   ctx.lineTo(arrowX + 1, y - 4);
-                   ctx.moveTo(arrowX + 5, y);
-                   ctx.lineTo(arrowX + 1, y + 4);
-                   ctx.stroke();
-               }
-           }
-        }
+        ctx.fillRect(wireRightX - 12, wireTopY + (wireBottomY - wireTopY) / 2 + 28, 24, 20);
       }
 
-      // Draw Cations
+      // Draw Metal Box Background
+      const metalBgColor = isLight ? '#e2e8f0' : '#0f172a';
+      ctx.fillStyle = metalBgColor;
+      ctx.fillRect(bounds.x, bounds.y, bounds.w, bounds.h);
+      ctx.strokeStyle = isLight ? '#cbd5e1' : '#334155';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
+
+      // Draw Cations and Core Electrons
+      const coreFill = getCoreElectronColor(theme);
+
       cations.forEach(c => {
         let cationRadius = CATION_RADIUS;
         let fillColor = '#ef4444'; 
         let strokeColor = '#991b1b';
         let labelText = '+';
         
+        // Substitutional Alloy logic (15% radius variance)
         if (c.isAlloyB) {
-          cationRadius = CATION_RADIUS * 1.15; // 15% larger for solid solution
+          cationRadius = CATION_RADIUS * 1.15; 
           if (c.temp > 0.01) {
             const r = 245;
             const g = Math.floor(158 + c.temp * 97);
@@ -637,6 +657,7 @@ export default function MetalSimulation({
           fillColor = `rgb(${r}, ${g}, ${b})`;
         }
         
+        // Nucleus
         ctx.beginPath();
         ctx.arc(c.x, c.y, cationRadius, 0, Math.PI * 2);
         ctx.fillStyle = fillColor;
@@ -646,13 +667,23 @@ export default function MetalSimulation({
         ctx.stroke();
         
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${cationRadius}px Inter, sans-serif`;
+        ctx.font = `bold ${cationRadius * 0.9}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(labelText, c.x, c.y);
+
+        // Core Electrons
+        c.coreElectrons.forEach(ce => {
+            const cx = c.x + Math.cos(ce.angle) * ce.orbitRadius;
+            const cy = c.y + Math.sin(ce.angle) * ce.orbitRadius;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = coreFill;
+            ctx.fill();
+        });
       });
 
-      // Draw Electron Trails
+      // Draw Delocalized Electron Trails
       if (showTrails && electronTrailsRef.current.length !== electrons.length) {
         electronTrailsRef.current = electrons.map(() => []);
       }
@@ -681,26 +712,31 @@ export default function MetalSimulation({
         electronTrailsRef.current = [];
       }
       
-      // Draw Electrons
+      // Draw Delocalized Electrons (Electron Gas)
+      const delocFillColor = getDelocalizedElectronColor();
+      const delocGlowColor = getDelocalizedElectronGlowColor();
+
       electrons.forEach((e) => {
         ctx.save();
-        ctx.shadowColor = getElectronGlowColor(theme);
-        ctx.shadowBlur = 10;
+        ctx.shadowColor = delocGlowColor;
+        ctx.shadowBlur = 12;
 
+        // Inner Glow
         ctx.beginPath();
-        ctx.fillStyle = getElectronGlowColor(theme);
+        ctx.fillStyle = delocGlowColor;
         ctx.arc(e.x, e.y, ELECTRON_RADIUS + 4, 0, Math.PI * 2);
         ctx.fill();
 
+        // Core Body
         ctx.beginPath();
         ctx.arc(e.x, e.y, ELECTRON_RADIUS, 0, Math.PI * 2);
-        ctx.fillStyle = getElectronFillColor(theme);
+        ctx.fillStyle = delocFillColor;
         ctx.fill();
-        ctx.strokeStyle = getElectronStrokeColor(theme);
+        ctx.strokeStyle = 'rgba(12, 74, 110, 0.9)'; // Dark slate border for contrast
         ctx.lineWidth = 1;
         ctx.stroke();
         
-        ctx.fillStyle = getElectronGlyphColor(theme);
+        ctx.fillStyle = '#0f172a';
         ctx.font = '10px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -800,7 +836,7 @@ export default function MetalSimulation({
     const x = (e.clientX - rect.left) * scaleX;
     
     // Substitutional Solid Solution Strengthening Logic
-    const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.40; // Harder to move
+    const alloyFrictionFactor = 1 - (alloyMix / 100) * 0.50; // Harder to move based on mismatch
     const dx = (x - dragState.current.dragStartX) * alloyFrictionFactor;
     dragState.current.dragStartX = x;
     
