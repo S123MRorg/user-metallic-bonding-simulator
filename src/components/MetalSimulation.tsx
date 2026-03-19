@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 
 export type SimulationMode = 'normal' | 'malleable' | 'electrical' | 'heat' | 'circuit';
@@ -14,7 +14,7 @@ interface Cation {
   row: number;
   col: number;
   temp: number;
-  isAlloyB: boolean; // true if this is a Metal B atom in an alloy
+  isAlloyB: boolean; 
 }
 
 interface Electron {
@@ -22,11 +22,9 @@ interface Electron {
   y: number;
   vx: number;
   vy: number;
-  speedMultiplier: number;
-  state: 'metal' | 'wire';
-  wireProgress?: number;
-  exitY?: number;
-  entryY?: number;
+  ax: number; // Acceleration X
+  ay: number; // Acceleration Y
+  state: 'metal'; // Simplified to only exist in the lattice
 }
 
 interface Props {
@@ -43,15 +41,15 @@ interface Props {
   particleSpawner?: boolean;
   crystalStructure?: 'square' | 'hexagonal' | 'fcc';
   alloyMix?: number;
-  singleLayerMode?: boolean; // Toggle for single vs multi-layer sliding
+  singleLayerMode?: boolean; 
   onParticleSpawn?: () => void;
   onLayerSlide?: () => void;
-  theme?: 'light' | 'dark'; // Theme prop for canvas colors
+  theme?: 'light' | 'dark';
 }
 
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 800;
-const MAX_RECORD_FRAMES = 480; // 240 frames at 30fps = 8 seconds.
+const MAX_RECORD_FRAMES = 480; 
 const CATION_RADIUS = 20;
 const ELECTRON_RADIUS = 5;
 const ROWS = 5;
@@ -60,28 +58,18 @@ const SPACING_X = CANVAS_WIDTH / (COLS + 1);
 const SPACING_Y = CANVAS_HEIGHT / (ROWS + 1);
 const CIRCUIT_OFFSET_X = 250;
 const CIRCUIT_OFFSET_Y = 120;
-const WIRE_PATH_LENGTH = 900;
 const ELECTRONS_PER_CATION = 1;
-const CIRCUIT_WIRE_ELECTRONS_PER_CATION = 0.5;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function getElectronFillColor(theme: 'light' | 'dark', state: Electron['state']) {
-  if (theme === 'dark') {
-    return state === 'wire' ? '#f8fafc' : '#ffffff';
-  }
-
-  return state === 'wire' ? '#16a34a' : '#22c55e';
+function getElectronFillColor(theme: 'light' | 'dark') {
+  return theme === 'dark' ? '#ffffff' : '#22c55e';
 }
 
-function getElectronStrokeColor(theme: 'light' | 'dark', state: Electron['state']) {
-  if (theme === 'dark') {
-    return state === 'wire' ? 'rgba(226, 232, 240, 0.95)' : 'rgba(15, 23, 42, 0.9)';
-  }
-
-  return state === 'wire' ? 'rgba(22, 163, 74, 0.8)' : 'rgba(21, 128, 61, 0.85)';
+function getElectronStrokeColor(theme: 'light' | 'dark') {
+  return theme === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(21, 128, 61, 0.85)';
 }
 
 function getElectronGlyphColor(theme: 'light' | 'dark') {
@@ -92,12 +80,8 @@ function getElectronTrailColor(theme: 'light' | 'dark') {
   return theme === 'dark' ? 'rgba(255, 255, 255, 0.24)' : 'rgba(34, 197, 94, 0.24)';
 }
 
-function getElectronGlowColor(theme: 'light' | 'dark', state: Electron['state']) {
-  if (theme === 'dark') {
-    return state === 'wire' ? 'rgba(248, 250, 252, 0.35)' : 'rgba(255, 255, 255, 0.22)';
-  }
-
-  return state === 'wire' ? 'rgba(22, 163, 74, 0.32)' : 'rgba(34, 197, 94, 0.18)';
+function getElectronGlowColor(theme: 'light' | 'dark') {
+  return theme === 'dark' ? 'rgba(255, 255, 255, 0.22)' : 'rgba(34, 197, 94, 0.18)';
 }
 
 function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number }, cations: Cation[]) {
@@ -116,30 +100,6 @@ function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number
     x: clamp(cation.baseX + Math.cos(angle) * radius, bounds.x + 8, bounds.x + bounds.w - 8),
     y: clamp(cation.baseY + Math.sin(angle) * radius, bounds.y + 8, bounds.y + bounds.h - 8),
   };
-}
-
-function getWirePos(progress: number, exitY: number, entryY: number) {
-  // More realistic circuit path with proper proportions
-  // Total path ~1100 units
-  // Path: metal -> right -> down -> left (through battery) -> up -> metal
-  if (progress < 40) return { x: 480 + CIRCUIT_OFFSET_X, y: exitY + (200 + CIRCUIT_OFFSET_Y - exitY) * (progress / 40) };
-  progress -= 40;
-  
-  if (progress < 100) return { x: 480 + CIRCUIT_OFFSET_X + progress, y: 200 + CIRCUIT_OFFSET_Y };  // right to x=580
-  progress -= 100;
-  if (progress < 160) return { x: 580 + CIRCUIT_OFFSET_X, y: 200 + CIRCUIT_OFFSET_Y + progress };  // down to y=360
-  progress -= 160;
-  if (progress < 250) return { x: 580 + CIRCUIT_OFFSET_X - progress * 1.0, y: 360 + CIRCUIT_OFFSET_Y };  // left to x=330 (battery positive)
-  progress -= 250;
-  if (progress < 60) return { x: 330 + CIRCUIT_OFFSET_X - progress * 1.0, y: 360 + CIRCUIT_OFFSET_Y };  // through battery to x=270
-  progress -= 60;
-  if (progress < 90) return { x: 270 + CIRCUIT_OFFSET_X - progress, y: 360 + CIRCUIT_OFFSET_Y };  // continue left to x=180
-  progress -= 90;
-  if (progress < 160) return { x: 180 + CIRCUIT_OFFSET_X, y: 360 + CIRCUIT_OFFSET_Y - progress };  // up to y=200
-  progress -= 160;
-  
-  if (progress < 40) return { x: 180 + CIRCUIT_OFFSET_X, y: 200 + CIRCUIT_OFFSET_Y + (entryY - (200 + CIRCUIT_OFFSET_Y)) * (progress / 40) };
-  return { x: 180 + CIRCUIT_OFFSET_X, y: entryY };
 }
 
 export default function MetalSimulation({ 
@@ -171,16 +131,14 @@ export default function MetalSimulation({
   const camRef = useRef({ x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, zoom: 1 });
   const electronTrailsRef = useRef<{x: number, y: number}[][]>([]);
   const lastCrystalStructureRef = useRef<string>('');
-  const animationProgressRef = useRef<number>(1); // For smooth crystal transitions
+  const animationProgressRef = useRef<number>(1); 
   
-  // Dragging state for malleable mode
   const dragState = useRef({
     isDragging: false,
     dragRow: -1,
     dragStartX: 0
   });
 
-  // GIF Recording state
   const gifState = useRef({
     encoder: null as any,
     frameCount: 0
@@ -223,7 +181,6 @@ export default function MetalSimulation({
       }
       cationsRef.current = cations;
 
-      // Initialize alloy types based on alloyMix
       if (alloyMix > 0) {
         const numAlloyB = Math.floor(cations.length * (alloyMix / 100));
         const shuffledIndices = [...Array(cations.length).keys()].sort(() => Math.random() - 0.5);
@@ -240,83 +197,62 @@ export default function MetalSimulation({
 
       for (let i = 0; i < metalElectronCount; i++) {
         const pos = spawnMetalElectron(bounds, cations);
+        // Base thermal velocities based on Drude/Fermi models
+        const vFermi = 150; 
+        const angle = Math.random() * Math.PI * 2;
         electrons.push({
           x: pos.x,
           y: pos.y,
-          vx: (Math.random() - 0.5) * 4,
-          vy: (Math.random() - 0.5) * 4,
-          speedMultiplier: 1,
+          vx: Math.cos(angle) * vFermi,
+          vy: Math.sin(angle) * vFermi,
+          ax: 0,
+          ay: 0,
           state: 'metal',
         });
       }
-      
-      if (isCircuit) {
-        const wireElectronCount = Math.max(6, Math.round(cations.length * CIRCUIT_WIRE_ELECTRONS_PER_CATION));
-        for (let i = 0; i < wireElectronCount; i++) {
-          const progress = Math.random() * WIRE_PATH_LENGTH;
-          electrons.push({
-            x: 0, y: 0, vx: 0, vy: 0, speedMultiplier: 1, 
-            state: 'wire', 
-            wireProgress: progress,
-            exitY: bounds.y + Math.random() * bounds.h,
-            entryY: bounds.y + Math.random() * bounds.h
-          });
-        }
-      }
       electronsRef.current = electrons;
     }
-  }, [mode]);
+  }, [mode, alloyMix]);
 
-  // Handle crystal structure changes with smooth transitions
+  // Crystal Structure Transitions
   useEffect(() => {
     if (cationsRef.current.length === 0) return;
     
     const isCircuit = mode === 'circuit';
-      const bounds = isCircuit ? { x: 180 + CIRCUIT_OFFSET_X, y: 80 + CIRCUIT_OFFSET_Y, w: 400, h: 120 } : { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
+    const bounds = isCircuit ? { x: 180 + CIRCUIT_OFFSET_X, y: 80 + CIRCUIT_OFFSET_Y, w: 400, h: 120 } : { x: 0, y: 0, w: CANVAS_WIDTH, h: CANVAS_HEIGHT };
     const rows = isCircuit ? 3 : ROWS;
     const cols = isCircuit ? 6 : COLS;
     
     const spacingX = bounds.w / (cols + 1);
     const spacingY = bounds.h / (rows + 1);
     
-    // Trigger animation when crystal structure changes
-    const structureChanged = lastCrystalStructureRef.current !== crystalStructure;
-    if (structureChanged) {
+    if (lastCrystalStructureRef.current !== crystalStructure) {
       lastCrystalStructureRef.current = crystalStructure;
-      animationProgressRef.current = 0; // Start animation
+      animationProgressRef.current = 0; 
     }
     
-    // Update target positions based on crystal structure
-    cationsRef.current.forEach((c, i) => {
+    cationsRef.current.forEach(c => {
       const r = c.row;
       const col = c.col;
       
       if (crystalStructure === 'hexagonal') {
-        // Hexagonal close packing - offset every other row
         const offset = r % 2 === 1 ? spacingX / 2 : 0;
         c.targetX = bounds.x + (col + 1) * spacingX + offset;
-        c.targetY = bounds.y + (r + 1) * spacingY * 0.866; // Close packing factor
+        c.targetY = bounds.y + (r + 1) * spacingY * 0.866; 
       } else if (crystalStructure === 'fcc') {
-        // Face-centered cubic - proper 2D projection
-        // In FCC, atoms are at corners + face centers
-        // For 2D visualization: stagger rows like a distorted square lattice
         const stagger = (r % 2) * (spacingX * 0.25);
         const verticalStagger = (col % 2) * (spacingY * 0.25);
         c.targetX = bounds.x + (col + 1) * spacingX + stagger;
         c.targetY = bounds.y + (r + 1) * spacingY + verticalStagger;
       } else {
-        // Square lattice (default)
         c.targetX = bounds.x + (col + 1) * spacingX;
         c.targetY = bounds.y + (r + 1) * spacingY;
       }
     });
     
-    // Handle alloy mix changes - re-randomize alloy atoms
     if (alloyMix > 0) {
       const numAlloyB = Math.floor(cationsRef.current.length * (alloyMix / 100));
-      // Reset all first
       cationsRef.current.forEach(c => c.isAlloyB = false);
-      // Then randomly assign
       const shuffledIndices = [...Array(cationsRef.current.length).keys()].sort(() => Math.random() - 0.5);
       for (let i = 0; i < numAlloyB; i++) {
         cationsRef.current[shuffledIndices[i]].isAlloyB = true;
@@ -326,14 +262,13 @@ export default function MetalSimulation({
     }
   }, [crystalStructure, mode, alloyMix]);
 
-  // Handle Recording State Changes
+  // Recording State Handlers
   useEffect(() => {
     if (isRecording && !gifState.current.encoder) {
       gifState.current.encoder = GIFEncoder();
       gifState.current.frameCount = 0;
       onRecordingProgress?.(0);
       
-      // Reset heat animation if we are in heat mode to capture the full tour
       if (mode === 'heat') {
         heatTimeRef.current = 0;
         cationsRef.current.forEach(c => c.temp = 0);
@@ -413,7 +348,6 @@ export default function MetalSimulation({
         targetCamY = CANVAS_HEIGHT / 2;
       }
 
-      // Smooth camera interpolation
       camRef.current.x += (targetCamX - camRef.current.x) * 0.05;
       camRef.current.y += (targetCamY - camRef.current.y) * 0.05;
       camRef.current.zoom += (targetZoom - camRef.current.zoom) * 0.05;
@@ -434,150 +368,112 @@ export default function MetalSimulation({
         });
       }
 
-      const updatePhysics = (dt: number) => {
-        // Update Cations
-        cations.forEach(c => {
-          // Smooth interpolation for crystal structure transitions
-          const lerpSpeed = 0.08;
-          c.baseX += (c.targetX - c.baseX) * lerpSpeed;
-          c.baseY += (c.targetY - c.baseY) * lerpSpeed;
-          
-          // Vibration amplitude based on temperature (global + local)
-          const globalTemp = temperature / 100; // 0-1 from prop
-          const amplitude = mode === 'heat' ? 1 + c.temp * 8 : 1.5 + globalTemp * 8;
-          
-          // Return to base position slightly if not dragged
-          c.x = c.baseX + (Math.random() - 0.5) * amplitude * Math.min(dt, 5);
-          c.y = c.baseY + (Math.random() - 0.5) * amplitude * Math.min(dt, 5);
-          
-          if (mode === 'heat') {
-            const t = heatTimeRef.current;
-            // Heat spreads from left to right over time, perfectly synced with the tour
-            const delay = c.col * 1.5; // Each column starts heating 1.5s after the previous
-            if (t > delay) {
-               c.temp = Math.min(1, (t - delay) / 4); // Takes 4 seconds to fully heat up
-            } else {
-               c.temp = 0;
-            }
+      // -- PHYSICS REFACTOR: Velocity Verlet & Drude Model --
+      const dt = safeDelta * animationSpeed;
+      const isElectric = (mode === 'electrical' || mode === 'circuit');
+      
+      // Calculate macroscopic temperatures
+      let avgTemp = 0;
+      cations.forEach(c => avgTemp += c.temp);
+      avgTemp /= cations.length || 1;
+      const globalBaseTemp = temperature / 100;
+
+      // Macroscopic Ohm's law values for continuous vector flow
+      const circuitResistance = 10 + ((mode === 'heat' ? avgTemp : globalBaseTemp) * 25); 
+      const currentMagnitude = isElectric ? (voltage / circuitResistance) : 0; 
+      
+      // Electric field acting on electrons (Force/mass scaling)
+      const eFieldForceX = isElectric ? (voltage / 50) * 1200 : 0; 
+
+      // Update Cations
+      cations.forEach(c => {
+        const lerpSpeed = 0.08;
+        c.baseX += (c.targetX - c.baseX) * lerpSpeed;
+        c.baseY += (c.targetY - c.baseY) * lerpSpeed;
+        
+        const localTemp = mode === 'heat' ? c.temp : globalBaseTemp;
+        const amplitude = 1.5 + localTemp * 8;
+        
+        // Lattice vibration 
+        c.x = c.baseX + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
+        c.y = c.baseY + (Math.random() - 0.5) * amplitude * Math.min(safeDelta * 10, 5);
+        
+        if (mode === 'heat') {
+          const t = heatTimeRef.current;
+          const delay = c.col * 1.5; 
+          if (t > delay) {
+              c.temp = Math.min(1, (t - delay) / 4); 
           } else {
-            // Cool down
-            c.temp *= Math.pow(0.95, dt);
+              c.temp = 0;
           }
-        });
+        } else {
+          c.temp *= Math.pow(0.95, safeDelta); // cool down
+        }
+      });
 
-        // Update Electrons
-        electrons.forEach(e => {
-          let currentSpeedMult = dt;
+      // Update Electrons (Drude Model)
+      const baseTau = 0.08; // Base mean free time
+
+      electrons.forEach(e => {
+        // Find local scattering temperature
+        let localTemp = globalBaseTemp;
+        if (mode === 'heat') {
+          let minDist = Infinity;
+          cations.forEach(c => {
+            const dist = Math.hypot(e.x - c.x, e.y - c.y);
+            if (dist < minDist) { minDist = dist; localTemp = c.temp; }
+          });
+        }
+
+        // Drude scattering probability (P = 1 - e^(-dt/tau))
+        // Lattice resistance increases with temp
+        const tau = baseTau / (1 + localTemp * 5); 
+        const collisionProb = 1 - Math.exp(-dt / tau);
+
+        // Velocity Verlet Step 1: Position update
+        e.x += e.vx * dt + 0.5 * e.ax * dt * dt;
+        e.y += e.vy * dt + 0.5 * e.ay * dt * dt;
+
+        // Force Fields (Acceleration)
+        const newAx = eFieldForceX;
+        const newAy = 0;
+
+        // Velocity Verlet Step 2: Velocity update
+        e.vx += 0.5 * (e.ax + newAx) * dt;
+        e.vy += 0.5 * (e.ay + newAy) * dt;
+
+        e.ax = newAx;
+        e.ay = newAy;
+
+        // Scattering Event (Electron-Ion collision)
+        if (Math.random() < collisionProb) {
+          const vFermi = 150; 
+          const vThermal = vFermi + localTemp * 300; // Thermalize based on temp
+          const angle = Math.random() * Math.PI * 2;
           
-          if (e.state === 'wire') {
-              // Move along the wire with smooth path-following and consistent flow speed
-              const voltageMultiplier = voltage / 50;
-              const wireSpeed = 2.6 + voltageMultiplier * 1.4;
-              const prevProgress = e.wireProgress!;
-              const nextProgress = prevProgress + wireSpeed * dt;
+          e.vx = Math.cos(angle) * vThermal;
+          e.vy = Math.sin(angle) * vThermal;
+        }
 
-              if (nextProgress >= WIRE_PATH_LENGTH) {
-                 const endPos = getWirePos(WIRE_PATH_LENGTH - 0.001, e.exitY!, e.entryY!);
-                 e.state = 'metal';
-                 e.wireProgress = 0;
-                 e.x = bounds.x + 8;
-                 e.y = clamp(e.entryY!, bounds.y + 8, bounds.y + bounds.h - 8);
-                 e.vx = 2.8 + voltageMultiplier * 1.8;
-                 e.vy = (endPos.y - e.y) * 0.02;
-              } else {
-                 const prevPos = getWirePos(prevProgress, e.exitY!, e.entryY!);
-                 const pos = getWirePos(nextProgress, e.exitY!, e.entryY!);
-                 e.wireProgress = nextProgress;
-                 e.x = pos.x;
-                 e.y = pos.y;
-                 e.vx = (pos.x - prevPos.x) / Math.max(dt, 0.016);
-                 e.vy = (pos.y - prevPos.y) / Math.max(dt, 0.016);
-              }
-              return; // skip metal physics
-          }
+        // Boundary handling
+        if (mode === 'circuit') {
+          // Continuous loop via wrapping seamlessly
+          if (e.x > bounds.x + bounds.w) e.x -= bounds.w;
+          if (e.x < bounds.x) e.x += bounds.w;
+          if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
+          if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
+        } else {
+          // Hard boundaries
+          if (e.x > bounds.x + bounds.w) { e.x = bounds.x + bounds.w; e.vx *= -1; }
+          if (e.x < bounds.x) { e.x = bounds.x; e.vx *= -1; }
+          if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
+          if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
+        }
+      });
 
-          if (mode === 'heat') {
-            // Find nearest cation temperature to increase electron speed
-            let nearestTemp = 0;
-            let minDist = Infinity;
-            cations.forEach(c => {
-              const d = Math.hypot(c.x - e.x, c.y - e.y);
-              if (d < minDist) {
-                minDist = d;
-                nearestTemp = c.temp;
-              }
-            });
-            currentSpeedMult = dt * (1 + nearestTemp * 2);
-          }
-
-          if (mode === 'electrical' || mode === 'circuit') {
-            // Apply electric field (force to the right) - voltage affects acceleration
-            const voltageMultiplier = voltage / 50; // 0-2 range
-            const acceleration = mode === 'circuit' ? 0.42 : 0.5;
-            e.vx += acceleration * dt * voltageMultiplier;
-            const terminalVelocity = mode === 'circuit' ? 6.5 : 8 * voltageMultiplier;
-            if (e.vx > terminalVelocity) e.vx = terminalVelocity; // Terminal velocity
-            const verticalNoise = mode === 'circuit' ? 0.45 : 1;
-            e.vy += (Math.random() - 0.5) * verticalNoise * dt; // Some random vertical movement
-            
-            // Dampen vertical velocity
-            e.vy *= Math.pow(mode === 'circuit' ? 0.94 : 0.9, dt);
-          } else {
-            // Random walk
-            e.vx += (Math.random() - 0.5) * 1.5 * dt;
-            e.vy += (Math.random() - 0.5) * 1.5 * dt;
-            
-            // Normalize speed
-            const currentSpeed = Math.hypot(e.vx, e.vy);
-            const maxSpeed = 3;
-            if (currentSpeed > maxSpeed) {
-              e.vx = (e.vx / currentSpeed) * maxSpeed;
-              e.vy = (e.vy / currentSpeed) * maxSpeed;
-            }
-          }
-
-          e.x += e.vx * currentSpeedMult;
-          e.y += e.vy * currentSpeedMult;
-
-          // Boundary collision
-          if (mode === 'electrical') {
-            if (e.x > bounds.x + bounds.w) e.x = bounds.x + (e.x % bounds.w);
-            if (e.x < bounds.x) e.x = bounds.x + bounds.w + (e.x % bounds.w);
-            if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
-            if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
-          } else if (mode === 'circuit') {
-            if (e.x >= bounds.x + bounds.w) {
-               // Enter wire!
-               e.state = 'wire';
-               e.wireProgress = 0;
-               e.exitY = e.y;
-               e.entryY = bounds.y + Math.random() * bounds.h;
-               e.x = bounds.x + bounds.w - 2;
-               e.y = clamp(e.y, bounds.y + 8, bounds.y + bounds.h - 8);
-            }
-            if (e.x < bounds.x) { e.x = bounds.x; e.vx *= -1; }
-            if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
-            if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
-          } else {
-            if (e.x > bounds.x + bounds.w) { e.x = bounds.x + bounds.w; e.vx *= -1; }
-            if (e.x < bounds.x) { e.x = bounds.x; e.vx *= -1; }
-            if (e.y > bounds.y + bounds.h) { e.y = bounds.y + bounds.h; e.vy *= -1; }
-            if (e.y < bounds.y) { e.y = bounds.y; e.vy *= -1; }
-          }
-        });
-      };
-
-      // Step physics multiple times if animationSpeed is high to prevent tunneling
-      let remainingSpeed = animationSpeed;
-      while (remainingSpeed > 0) {
-        const step = Math.min(remainingSpeed, mode === 'circuit' ? 0.75 : 2);
-        updatePhysics(step);
-        remainingSpeed -= step;
-      }
-
-      // Draw Background
+      // --- RENDERING ---
       const isLight = theme === 'light';
-      ctx.fillStyle = isLight ? '#f1f5f9' : '#1e293b'; // slate-50 for light, slate-800 for dark
+      ctx.fillStyle = isLight ? '#f1f5f9' : '#1e293b'; 
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       ctx.save();
@@ -586,9 +482,8 @@ export default function MetalSimulation({
       ctx.translate(-camRef.current.x, -camRef.current.y);
 
       if (mode === 'heat') {
-        // Heat source gradient - wider for better visualization
         const gradient = ctx.createLinearGradient(0, 0, 220, 0);
-        gradient.addColorStop(0, 'rgba(239, 68, 68, 0.5)'); // red-500
+        gradient.addColorStop(0, 'rgba(239, 68, 68, 0.5)');
         gradient.addColorStop(0.3, 'rgba(239, 68, 68, 0.25)');
         gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
         ctx.fillStyle = gradient;
@@ -596,54 +491,57 @@ export default function MetalSimulation({
       }
 
       if (isCircuit) {
-        // Draw wires - centered circuit layout
-        ctx.strokeStyle = '#94a3b8'; // slate-400
-        ctx.lineWidth = 4;
+        // Continuous Circuit Vector Field Overhaul
+        const currentPulseRate = currentMagnitude * 30;
+        const dashOffset = -(time / 1000) * currentPulseRate;
+        const currentActiveColor = isLight ? '#22c55e' : '#4ade80';
+
+        // 1. Draw solid wire casing
+        ctx.strokeStyle = isLight ? '#cbd5e1' : '#475569'; 
+        ctx.lineWidth = 14;
+        ctx.lineJoin = 'round';
         ctx.beginPath();
-        // Right wire (from metal to bulb)
-        ctx.moveTo(480 + CIRCUIT_OFFSET_X, 200 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 200 + CIRCUIT_OFFSET_Y);
+        ctx.moveTo(480 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
+        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
         ctx.lineTo(580 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(330 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); // to battery positive
-        // Left wire (from battery negative)
-        ctx.moveTo(270 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); // from battery
+        ctx.lineTo(330 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); 
+        ctx.moveTo(270 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); 
         ctx.lineTo(180 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 200 + CIRCUIT_OFFSET_Y);
-        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 200 + CIRCUIT_OFFSET_Y);
+        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
         ctx.stroke();
 
-        // Add small directional arrows to show particle flow
-        ctx.fillStyle = '#94a3b8';
-        const arrowPoints = [
-          [520 + CIRCUIT_OFFSET_X, 200 + CIRCUIT_OFFSET_Y, 1, 0],
-          [580 + CIRCUIT_OFFSET_X, 250 + CIRCUIT_OFFSET_Y, 0, 1],
-          [500 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y, -1, 0],
-          [180 + CIRCUIT_OFFSET_X, 280 + CIRCUIT_OFFSET_Y, 0, -1],
-        ] as const;
-        arrowPoints.forEach(([x, y, dx, dy]) => {
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate(Math.atan2(dy, dx));
-          ctx.beginPath();
-          ctx.moveTo(-8, -4);
-          ctx.lineTo(0, 0);
-          ctx.lineTo(-8, 4);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        });
+        // 2. Draw Vector Field / Current Flow lines inside the wire
+        ctx.strokeStyle = voltage > 0 ? currentActiveColor : (isLight ? '#94a3b8' : '#64748b');
+        ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
+        ctx.setLineDash([15, 20]);
+        ctx.lineDashOffset = dashOffset;
+        
+        ctx.beginPath();
+        ctx.moveTo(480 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
+        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
+        ctx.lineTo(580 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
+        ctx.lineTo(330 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
+        ctx.stroke();
 
-        // Draw Electrodes - positioned to match cation grid
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(176 + CIRCUIT_OFFSET_X, 80 + CIRCUIT_OFFSET_Y, 4, 120);  // left electrode
-        ctx.fillRect(480 + CIRCUIT_OFFSET_X, 80 + CIRCUIT_OFFSET_Y, 4, 120);  // right electrode
+        ctx.beginPath();
+        ctx.moveTo(270 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y); 
+        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
+        ctx.lineTo(180 + CIRCUIT_OFFSET_X, 140 + CIRCUIT_OFFSET_Y);
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset
 
-        // Draw Battery - centered at bottom
+        // Draw Electrodes
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(176 + CIRCUIT_OFFSET_X, 80 + CIRCUIT_OFFSET_Y, 8, 120);
+        ctx.fillRect(476 + CIRCUIT_OFFSET_X, 80 + CIRCUIT_OFFSET_Y, 8, 120);
+
+        // Draw Battery
         ctx.fillStyle = '#334155';
-        ctx.fillRect(250 + CIRCUIT_OFFSET_X, 340 + CIRCUIT_OFFSET_Y, 100, 40);  // battery body
-        ctx.fillStyle = '#ef4444'; // positive terminal
+        ctx.fillRect(250 + CIRCUIT_OFFSET_X, 340 + CIRCUIT_OFFSET_Y, 100, 40); 
+        ctx.fillStyle = '#ef4444'; // positive
         ctx.fillRect(350 + CIRCUIT_OFFSET_X, 350 + CIRCUIT_OFFSET_Y, 10, 20);
-        ctx.fillStyle = '#cbd5e1'; // negative terminal
+        ctx.fillStyle = '#cbd5e1'; // negative
         ctx.fillRect(240 + CIRCUIT_OFFSET_X, 350 + CIRCUIT_OFFSET_Y, 10, 20);
         
         ctx.fillStyle = '#ffffff';
@@ -655,59 +553,70 @@ export default function MetalSimulation({
         ctx.fillText('+', 345 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
         ctx.fillText('-', 255 + CIRCUIT_OFFSET_X, 360 + CIRCUIT_OFFSET_Y);
 
-        // Draw Light Bulb - on the right side
-        ctx.fillStyle = '#fbbf24'; // amber-400 (glowing)
+        // Draw Light Bulb
+        const bulbIntensity = Math.min(1, currentMagnitude / 3.5); // Normalize brightness
+        ctx.fillStyle = `rgba(251, 191, 36, ${0.1 + bulbIntensity * 0.9})`; 
         ctx.beginPath();
-        ctx.arc(580 + CIRCUIT_OFFSET_X, 280 + CIRCUIT_OFFSET_Y, 24, 0, Math.PI * 2);  // slightly larger bulb
+        ctx.arc(580 + CIRCUIT_OFFSET_X, 280 + CIRCUIT_OFFSET_Y, 24, 0, Math.PI * 2); 
         ctx.fill();
-        // Bulb glow
         ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 10 + bulbIntensity * 40;
         ctx.fill();
-        ctx.shadowBlur = 0; // reset
+        ctx.shadowBlur = 0;
         
-        // Bulb base
         ctx.fillStyle = '#64748b';
         ctx.fillRect(570 + CIRCUIT_OFFSET_X, 304 + CIRCUIT_OFFSET_Y, 20, 18);
 
-        // Draw Metal Background
-        const metalBgColor = isLight ? '#e2e8f0' : '#0f172a'; // lighter slate for light mode
+        // Metal Background
+        const metalBgColor = isLight ? '#e2e8f0' : '#0f172a';
         ctx.fillStyle = metalBgColor;
         ctx.fillRect(bounds.x, bounds.y, bounds.w, bounds.h);
         ctx.strokeStyle = isLight ? '#cbd5e1' : '#334155';
         ctx.lineWidth = 2;
         ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
         
-        // Label
-        ctx.fillStyle = isLight ? '#475569' : '#64748b';
-        ctx.font = '12px Inter';
-        ctx.textAlign = 'left';
-        ctx.fillText('METAL WIRE / MATERIAL', bounds.x + 10, bounds.y - 8);
+        // Internal Vector Field Overlay for Metal
+        if (voltage > 0) {
+           const spacing = 35;
+           ctx.strokeStyle = `rgba(34, 197, 94, ${Math.min(0.6, currentMagnitude * 0.15)})`;
+           ctx.lineWidth = 2;
+           for (let x = bounds.x + spacing/2; x < bounds.x + bounds.w; x += spacing) {
+               for (let y = bounds.y + spacing/2; y < bounds.y + bounds.h; y += spacing) {
+                   const offset = ((time / 1000) * currentPulseRate + x) % spacing;
+                   const arrowX = bounds.x + offset + Math.floor((x - bounds.x) / spacing) * spacing;
+                   if (arrowX > bounds.x + bounds.w - 10) continue;
+
+                   ctx.beginPath();
+                   ctx.moveTo(arrowX - 5, y);
+                   ctx.lineTo(arrowX + 5, y);
+                   ctx.lineTo(arrowX + 1, y - 4);
+                   ctx.moveTo(arrowX + 5, y);
+                   ctx.lineTo(arrowX + 1, y + 4);
+                   ctx.stroke();
+               }
+           }
+        }
       }
 
       // Draw Cations
       cations.forEach(c => {
-        // Determine cation properties based on alloy type
         let cationRadius = CATION_RADIUS;
-        let fillColor = '#ef4444'; // red-500 (Metal A)
+        let fillColor = '#ef4444'; 
         let strokeColor = '#991b1b';
         let labelText = '+';
         
         if (c.isAlloyB) {
-          // Metal B in alloy - show as gold/amber color
-          cationRadius = CATION_RADIUS * 1.15; // Slightly larger
+          cationRadius = CATION_RADIUS * 1.15; 
           if (c.temp > 0.01) {
-            // Interpolate from gold to white based on temp
             const r = 245;
             const g = Math.floor(158 + c.temp * 97);
             const b = Math.floor(58 + c.temp * 197);
             fillColor = `rgb(${r}, ${g}, ${b})`;
           } else {
-            fillColor = '#f59e0b'; // amber-500 (Metal B)
+            fillColor = '#f59e0b'; 
           }
           strokeColor = '#b45309';
         } else if (c.temp > 0.01) {
-          // Interpolate from red to yellow/white based on temp
           const r = 239;
           const g = Math.floor(68 + c.temp * 180);
           const b = Math.floor(68 + c.temp * 180);
@@ -729,59 +638,52 @@ export default function MetalSimulation({
         ctx.fillText(labelText, c.x, c.y);
       });
 
-      // Draw Electrons
-      // Initialize trails if needed
+      // Draw Electron Trails
       if (showTrails && electronTrailsRef.current.length !== electrons.length) {
         electronTrailsRef.current = electrons.map(() => []);
       }
       
-      // Update and draw trails
       if (showTrails) {
         electrons.forEach((e, i) => {
-          if (e.state === 'metal') {
-            if (!electronTrailsRef.current[i]) electronTrailsRef.current[i] = [];
-            electronTrailsRef.current[i].push({ x: e.x, y: e.y });
-            if (electronTrailsRef.current[i].length > 15) {
-              electronTrailsRef.current[i].shift();
+          if (!electronTrailsRef.current[i]) electronTrailsRef.current[i] = [];
+          electronTrailsRef.current[i].push({ x: e.x, y: e.y });
+          if (electronTrailsRef.current[i].length > 15) {
+            electronTrailsRef.current[i].shift();
+          }
+          
+          const trail = electronTrailsRef.current[i];
+          if (trail.length > 1) {
+            ctx.beginPath();
+            ctx.moveTo(trail[0].x, trail[0].y);
+            for (let j = 1; j < trail.length; j++) {
+              ctx.lineTo(trail[j].x, trail[j].y);
             }
-            
-            // Draw trail
-            const trail = electronTrailsRef.current[i];
-            if (trail.length > 1) {
-              ctx.beginPath();
-              ctx.moveTo(trail[0].x, trail[0].y);
-              for (let j = 1; j < trail.length; j++) {
-                ctx.lineTo(trail[j].x, trail[j].y);
-              }
-              ctx.strokeStyle = getElectronTrailColor(theme);
-              ctx.lineWidth = 2;
-              ctx.stroke();
-            }
+            ctx.strokeStyle = getElectronTrailColor(theme);
+            ctx.lineWidth = 2;
+            ctx.stroke();
           }
         });
       } else {
-        // Clear trails when disabled
         electronTrailsRef.current = [];
       }
       
-      // Draw electrons
-      electrons.forEach((e, i) => {
+      // Draw Electrons
+      electrons.forEach((e) => {
         ctx.save();
-        ctx.shadowColor = getElectronGlowColor(theme, e.state);
-        ctx.shadowBlur = e.state === 'wire' ? 14 : 10;
+        ctx.shadowColor = getElectronGlowColor(theme);
+        ctx.shadowBlur = 10;
 
         ctx.beginPath();
-        const electronRadius = e.state === 'wire' ? ELECTRON_RADIUS * 0.95 : ELECTRON_RADIUS;
-        ctx.fillStyle = getElectronGlowColor(theme, e.state);
-        ctx.arc(e.x, e.y, electronRadius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = getElectronGlowColor(theme);
+        ctx.arc(e.x, e.y, ELECTRON_RADIUS + 4, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(e.x, e.y, electronRadius, 0, Math.PI * 2);
-        ctx.fillStyle = getElectronFillColor(theme, e.state);
+        ctx.arc(e.x, e.y, ELECTRON_RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = getElectronFillColor(theme);
         ctx.fill();
-        ctx.strokeStyle = getElectronStrokeColor(theme, e.state);
-        ctx.lineWidth = e.state === 'wire' ? 1.5 : 1;
+        ctx.strokeStyle = getElectronStrokeColor(theme);
+        ctx.lineWidth = 1;
         ctx.stroke();
         
         ctx.fillStyle = getElectronGlyphColor(theme);
@@ -794,46 +696,43 @@ export default function MetalSimulation({
 
       ctx.restore();
 
-      // Draw Overlay Text for Heat Mode - more compact info panel
+      // Overlay text for Heat Mode
       if (mode === 'heat' && overlayTitle) {
-        ctx.fillStyle = isLight ? 'rgba(241, 245, 249, 0.95)' : 'rgba(15, 23, 42, 0.85)'; // slate-50 for light, slate-900 for dark
-        ctx.fillRect(20, CANVAS_HEIGHT - 80, CANVAS_WIDTH - 40, 60);  // smaller panel
+        ctx.fillStyle = isLight ? 'rgba(241, 245, 249, 0.95)' : 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(20, CANVAS_HEIGHT - 80, CANVAS_WIDTH - 40, 60);  
         ctx.strokeStyle = isLight ? '#cbd5e1' : '#334155';
         ctx.lineWidth = 2;
         ctx.strokeRect(20, CANVAS_HEIGHT - 80, CANVAS_WIDTH - 40, 60);
 
-        ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc'; // slate-900 for light, slate-50 for dark
+        ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc';
         ctx.font = 'bold 15px Inter, sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(overlayTitle, 40, CANVAS_HEIGHT - 70);
 
-        ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'; // slate-500 for light, slate-400 for dark
+        ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'; 
         ctx.font = '13px Inter, sans-serif';
         ctx.fillText(overlayText, 40, CANVAS_HEIGHT - 48, CANVAS_WIDTH - 80);
         
-        // Progress bar - thinner
-        const totalDuration = 24; // 24 seconds total loop
+        const totalDuration = 24; 
         const progress = (heatTimeRef.current % totalDuration) / totalDuration;
-        ctx.fillStyle = '#ef4444'; // red-500
-        ctx.fillRect(20, CANVAS_HEIGHT - 20, (CANVAS_WIDTH - 40) * progress, 3);  // thinner bar
+        ctx.fillStyle = '#ef4444'; 
+        ctx.fillRect(20, CANVAS_HEIGHT - 20, (CANVAS_WIDTH - 40) * progress, 3);
       }
 
       // Handle GIF Recording
       if (isRecording && gifState.current.encoder) {
-        // Record every 2nd frame (~30fps) for smoother animation
         if (gifState.current.frameCount % 2 === 0) {
           const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
           const palette = quantize(imageData.data, 256);
           const index = applyPalette(imageData.data, palette);
           gifState.current.encoder.writeFrame(index, CANVAS_WIDTH, CANVAS_HEIGHT, { palette, delay: 33 });
           
-          const maxRecordFrames = mode === 'heat' ? 1440 : MAX_RECORD_FRAMES; // 24s * 30fps = 720 recorded frames (1440 total frames)
+          const maxRecordFrames = mode === 'heat' ? 1440 : MAX_RECORD_FRAMES;
           const recordedFrames = gifState.current.frameCount / 2;
           onRecordingProgress?.(recordedFrames / (maxRecordFrames / 2));
           
           if (gifState.current.frameCount >= maxRecordFrames) {
-            // Auto-stop
             gifState.current.encoder.finish();
             const buffer = gifState.current.encoder.bytesView();
             const blob = new Blob([buffer], { type: 'image/gif' });
@@ -851,9 +750,8 @@ export default function MetalSimulation({
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [mode, isRecording, animationSpeed, autoMalleable, autoDemoSpeed, singleLayerMode, onRecordingComplete, onRecordingProgress, onLayerSlide]);
+  }, [mode, isRecording, animationSpeed, autoMalleable, autoDemoSpeed, singleLayerMode, onRecordingComplete, onRecordingProgress, onLayerSlide, temperature, voltage, showTrails, particleSpawner, crystalStructure, alloyMix, theme]);
 
-  // Mouse Interaction for Malleable Mode
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (mode !== 'malleable' || autoMalleable) return;
     const canvas = canvasRef.current;
@@ -871,7 +769,6 @@ export default function MetalSimulation({
       dragState.current.isDragging = true;
       dragState.current.dragRow = clickedCation.row;
       dragState.current.dragStartX = x;
-      // Trigger layer slide achievement when user manually drags layers (not in auto mode)
       if (!autoMalleable) {
         onLayerSlide?.();
       }
@@ -891,16 +788,12 @@ export default function MetalSimulation({
     dragState.current.dragStartX = x;
     
     cationsRef.current.forEach(c => {
-      // Move based on mode: single layer or multi-layer (scientific)
       if (singleLayerMode) {
-        // Single layer mode: only move the exact row that was clicked
         if (c.row === dragState.current.dragRow) {
           c.baseX += dx;
           c.targetX += dx;
         }
       } else {
-        // Multi-layer mode (scientific): move the clicked row and all rows above it
-        // This represents how shear stress causes planes to slide together in real metals
         if (c.row <= dragState.current.dragRow) {
           c.baseX += dx;
           c.targetX += dx;
@@ -914,7 +807,6 @@ export default function MetalSimulation({
     dragState.current.dragRow = -1;
   };
 
-  // Handle click for particle spawner
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!particleSpawner) return;
     
@@ -928,26 +820,23 @@ export default function MetalSimulation({
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
     
-    // Adjust for camera zoom and pan
     const adjustedX = (x - CANVAS_WIDTH / 2) / camRef.current.zoom + camRef.current.x;
     const adjustedY = (y - CANVAS_HEIGHT / 2) / camRef.current.zoom + camRef.current.y;
     
-    // Add new electron at click position
     electronsRef.current.push({
       x: clamp(adjustedX, 8, CANVAS_WIDTH - 8),
       y: clamp(adjustedY, 8, CANVAS_HEIGHT - 8),
-      vx: (Math.random() - 0.5) * 2,
-      vy: (Math.random() - 0.5) * 2,
-      speedMultiplier: 1,
+      vx: (Math.random() - 0.5) * 200,
+      vy: (Math.random() - 0.5) * 200,
+      ax: 0,
+      ay: 0,
       state: 'metal',
     });
     
-    // Initialize trail for new electron if trails are enabled
     if (showTrails) {
       electronTrailsRef.current.push([]);
     }
     
-    // Notify parent component
     onParticleSpawn?.();
   };
 
