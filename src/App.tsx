@@ -618,28 +618,6 @@ export default function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Keyboard shortcut for fullscreen (F key)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      // F key to toggle fullscreen
-      if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
-        toggleFullscreen();
-      }
-      // Escape also exits fullscreen (browser default), but we can handle it explicitly
-      if (e.key === 'Escape' && isFullscreen) {
-        e.preventDefault();
-        toggleFullscreen();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen]);
-
   // Update challenge progress
   useEffect(() => {
     const timer = setInterval(() => {
@@ -964,61 +942,115 @@ export default function App() {
             
             {showAdvanced && (
               <div className="px-6 pb-6 space-y-4 animate-fade-in">
+                {/* Animation Speed */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm ${textSecondary}`}>Animation Speed</span>
+                      <div className="group relative">
+                        <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
+                        <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
+                          Controls how fast delocalized electrons move. In real metals, electrons move at ~1,000,000 m/s (Fermi velocity), represented by 10x speed.
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-xs ${textMuted}`}>{animationSpeed.toFixed(2)}x</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0.01" 
+                    max="10" 
+                    step="0.01"
+                    value={animationSpeed} 
+                    onChange={(e) => setAnimationSpeed(Number(e.target.value))}
+                    className="w-full accent-blue-500"
+                  />
+                  <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-500'} mt-1`}>
+                    Real life: ~1,000,000 m/s (10x)
+                  </p>
+                </div>
 
-                 {mode === 'malleable' && (
-                   <div>
-                     <div className="flex items-center justify-between mb-2">
-                       <div className="flex items-center gap-2">
-                         <Clock className={`w-4 h-4 ${isDark ? 'text-cyan-400' : 'text-cyan-500'}`} />
-                         <span className={`text-sm ${textSecondary}`}>Auto Demo Speed</span>
-                         <div className="group relative">
-                           <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
-                           <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
-                             Controls how fast the auto-demonstration animates. Adjust between 0.5x (slow) to 5x (fast).
-                           </div>
-                         </div>
-                       </div>
-                       <span className={`text-xs ${textMuted}`}>{autoDemoSpeed.toFixed(1)}x</span>
-                     </div>
-                     <input 
-                       type="range" 
-                       min="0.5" 
-                       max="5" 
-                       step="0.1"
-                       value={autoDemoSpeed} 
-                       onChange={(e) => setAutoDemoSpeed(Number(e.target.value))}
-                       className="w-full accent-cyan-500"
-                     />
-                   </div>
-                 )}
-                 
-                 {/* Voltage Control */}
-                 {(mode === 'electrical' || mode === 'circuit') && (
-                   <div>
-                     <div className="flex items-center justify-between mb-2">
-                       <div className="flex items-center gap-2">
-                         <VoltageIcon className={`w-4 h-4 ${isDark ? 'text-amber-400' : 'text-amber-500'}`} />
-                         <span className={`text-sm ${textSecondary}`}>Voltage</span>
-                         <div className="group relative">
-                           <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
-                           <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
-                             Voltage creates an electric field that applies force on electrons, causing them to drift toward the positive terminal. Higher voltage = stronger force = faster electron flow.
-                           </div>
-                         </div>
-                       </div>
-                       <span className={`text-xs ${textMuted}`}>{voltage}V</span>
-                     </div>
-                     <input 
-                       type="range" 
-                       min="0" 
-                       max="100" 
-                       step="1"
-                       value={voltage} 
-                       onChange={(e) => setVoltage(Number(e.target.value))}
-                       className="w-full accent-amber-500"
-                     />
-                   </div>
-                 )}
+                {/* Auto Demonstrate Speed */}
+                {mode === 'malleable' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className={`w-4 h-4 ${isDark ? 'text-cyan-400' : 'text-cyan-500'}`} />
+                        <span className={`text-sm ${textSecondary}`}>Auto Demo Speed</span>
+                        <div className="group relative">
+                          <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
+                          <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
+                            Controls how fast the auto-demonstration animates. Adjust between 0.5x (slow) to 5x (fast).
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`text-xs ${textMuted}`}>{autoDemoSpeed.toFixed(1)}x</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0.5" 
+                      max="5" 
+                      step="0.1"
+                      value={autoDemoSpeed} 
+                      onChange={(e) => setAutoDemoSpeed(Number(e.target.value))}
+                      className="w-full accent-cyan-500"
+                    />
+                  </div>
+                )}
+
+                {/* Temperature Control */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Thermometer className={`w-4 h-4 ${isDark ? 'text-rose-400' : 'text-rose-500'}`} />
+                      <span className={`text-sm ${textSecondary}`}>Temperature</span>
+                      <div className="group relative">
+                        <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
+                        <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
+                          Higher temperature increases cation vibration amplitude and electron kinetic energy. This demonstrates thermal expansion and heat conduction.
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-xs ${textMuted}`}>{temperature}°C</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    step="1"
+                    value={temperature} 
+                    onChange={(e) => setTemperature(Number(e.target.value))}
+                    className="w-full accent-rose-500"
+                  />
+                </div>
+
+                {/* Voltage Control */}
+                {(mode === 'electrical' || mode === 'circuit') && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <VoltageIcon className={`w-4 h-4 ${isDark ? 'text-amber-400' : 'text-amber-500'}`} />
+                        <span className={`text-sm ${textSecondary}`}>Voltage</span>
+                        <div className="group relative">
+                          <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
+                          <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
+                            Voltage creates an electric field that applies force on electrons, causing them to drift toward the positive terminal. Higher voltage = stronger force = faster electron flow.
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`text-xs ${textMuted}`}>{voltage}V</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="100" 
+                      step="1"
+                      value={voltage} 
+                      onChange={(e) => setVoltage(Number(e.target.value))}
+                      className="w-full accent-amber-500"
+                    />
+                  </div>
+                )}
 
                 {/* Particle Spawner */}
                 <div className={`flex items-center justify-between py-2 ${isDark ? 'border-t border-slate-700/50' : 'border-t border-slate-200'}`}>
@@ -1049,7 +1081,34 @@ export default function App() {
                   </button>
                 </div>
 
-
+                {/* Electron Trails */}
+                <div className={`flex items-center justify-between py-2 ${isDark ? 'border-t border-slate-700/50' : 'border-t border-slate-200'}`}>
+                  <div className="flex items-center gap-2">
+                    <Eye className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-blue-600'}`} />
+                    <span className={`text-sm ${textSecondary}`}>Electron Trails</span>
+                    <div className="group relative">
+                      <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
+                      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
+                        Visualize the paths electrons take as they move through the metal. Shows the random walk motion characteristic of thermal motion.
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowTrails(!showTrails);
+                      if (!showTrails) trackFeature('trail_enable');
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      showTrails ? (isDark ? 'bg-purple-500' : 'bg-blue-500') : (isDark ? 'bg-slate-600' : 'bg-slate-300')
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        showTrails ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
 
                 {/* Crystal Structure */}
                 <div className={`py-2 ${isDark ? 'border-t border-slate-700/50' : 'border-t border-slate-200'}`}>
@@ -1149,25 +1208,15 @@ export default function App() {
         {/* Main Canvas Area - Fullscreen Wrapper */}
         <div 
           ref={simulationContainerRef}
-          className={`lg:flex-1 flex flex-col ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
-          style={isFullscreen ? { 
-            padding: '0', 
-            backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-            display: 'flex',
-            flexDirection: 'column'
-          } : {}}
+          className={`lg:flex-1 flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : ''}`}
+          style={isFullscreen ? { padding: '0', backgroundColor: isDark ? '#0f172a' : '#f8fafc' } : {}}
         >
           {/* Quick Controls Bar - Animation Speed, Temperature, Electron Trails */}
           <div 
-            className={`${bgCard} border ${borderColor}/50 rounded-2xl p-4 ${isFullscreen ? 'mx-0 mt-0 rounded-none border-t-0 border-x-0' : ''}`}
-            style={isFullscreen ? { 
-              width: '100%', 
-              maxWidth: 'none',
-              borderRadius: '0',
-              padding: '12px 24px'
-            } : {}}
+            className={`${bgCard} border ${borderColor}/50 rounded-2xl p-4 ${isFullscreen ? 'mx-2 mt-2' : ''}`}
+            style={isFullscreen ? { maxWidth: '1400px', margin: '0 auto', width: 'calc(100% - 16px)' } : {}}
           >
-            <div className={`flex flex-wrap items-center justify-center gap-6 ${isFullscreen ? 'gap-6' : ''}`}>
+            <div className={`flex flex-wrap items-center gap-6 ${isFullscreen ? 'gap-4' : ''}`}>
               {/* Animation Speed */}
               <div className="flex items-center gap-2 flex-1 min-w-[140px]">
                 <span className={`text-xs ${textMuted} whitespace-nowrap`}>Speed</span>
@@ -1242,26 +1291,16 @@ export default function App() {
 
           {/* Simulation Canvas */}
           <div 
-            className={`${bgCard} border ${borderColor}/50 rounded-2xl p-2 sm:p-4 flex-grow flex flex-col items-center justify-center relative overflow-hidden card-hover ${isFullscreen ? '!rounded-none !border-0 mt-0 flex-1' : 'mt-4'}`}
-            style={isFullscreen ? { 
-              width: '100%', 
-              maxWidth: 'none',
-              minHeight: '0',
-              height: '100%'
-            } : {}}
+            className={`${bgCard} border ${borderColor}/50 rounded-2xl p-2 sm:p-4 flex-grow flex flex-col items-center justify-center relative overflow-hidden card-hover ${isFullscreen ? '!rounded-none !border-0 mt-2' : 'mt-4'}`}
+            style={isFullscreen ? { maxWidth: '1400px', margin: '0 auto', width: 'calc(100% - 16px)', minHeight: '70vh' } : {}}
           >
-            {/* Fullscreen Toggle Button - Enhanced for fullscreen */}
+            {/* Fullscreen Toggle Button */}
             <button
               onClick={toggleFullscreen}
-              className={`absolute top-4 right-4 z-20 p-2.5 rounded-lg ${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} border ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg ${isFullscreen ? (isDark ? 'bg-red-500/90 hover:bg-red-600 border-red-400 text-white' : 'bg-black hover:bg-gray-800 border-gray-600 text-white') : ''}`}
-              title={isFullscreen ? 'Exit Fullscreen (F or Esc)' : 'Fullscreen (F)'}
+              className={`absolute top-4 right-4 z-10 p-2 rounded-lg ${bgSecondary} ${isDark ? 'border-slate-700' : 'border-slate-200'} border ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'} transition-all duration-200 hover:scale-110 active:scale-95`}
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             >
-              {isFullscreen ? (
-                <div className="flex items-center gap-1.5">
-                  <Minimize2 className="w-5 h-5" />
-                  <span className="text-xs font-medium">Exit</span>
-                </div>
-              ) : <Maximize2 className="w-5 h-5" />}
+              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </button>
             <div key={mode} className="animate-fade-in w-full h-full flex items-center justify-center">
               <MetalSimulation 
@@ -1286,24 +1325,24 @@ export default function App() {
             </div>
             
             {/* Legend / Info Overlay */}
-            <div className={`${isFullscreen ? 'absolute bottom-4 left-1/2 -translate-x-1/2' : 'mt-4'} w-full max-w-[800px] flex flex-wrap gap-4 justify-center text-sm ${isFullscreen ? (isDark ? 'bg-black/60' : 'bg-white/80') + ' backdrop-blur-md px-4 py-2 rounded-full shadow-lg' : ''}`}>
+            <div className={`mt-4 w-full max-w-[800px] flex flex-wrap gap-4 justify-center text-sm`}>
               <div className="flex items-center gap-2">
                 <div className={`w-4 h-4 rounded-full bg-red-500 border ${isDark ? 'border-red-700' : 'border-red-400'} flex items-center justify-center`}>
                   <span className="text-[8px] font-bold text-white">+</span>
                 </div>
-                <span className={isFullscreen ? (isDark ? 'text-white/90 text-xs' : 'text-black/90 text-xs') : textSecondary}>Metal A Cation</span>
+                <span className={textSecondary}>Metal A Cation</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className={`w-4 h-4 rounded-full bg-amber-500 border ${isDark ? 'border-amber-700' : 'border-amber-400'} flex items-center justify-center`}>
                   <span className="text-[8px] font-bold text-white">+</span>
                 </div>
-                <span className={isFullscreen ? (isDark ? 'text-white/90 text-xs' : 'text-black/90 text-xs') : textSecondary}>Metal B (Alloy)</span>
+                <span className={textSecondary}>Metal B (Alloy)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className={`w-3 h-3 rounded-full bg-blue-400 flex items-center justify-center`}>
                   <span className="text-[8px] font-bold text-white">-</span>
                 </div>
-                <span className={isFullscreen ? (isDark ? 'text-white/90 text-xs' : 'text-black/90 text-xs') : textSecondary}>Delocalized Electron</span>
+                <span className={textSecondary}>Delocalized Electron</span>
               </div>
             </div>
           </div>
