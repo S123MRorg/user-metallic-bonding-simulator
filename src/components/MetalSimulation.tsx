@@ -61,6 +61,54 @@ const SPACING_Y = CANVAS_HEIGHT / (ROWS + 1);
 const CIRCUIT_OFFSET_X = 250;
 const CIRCUIT_OFFSET_Y = 120;
 const WIRE_PATH_LENGTH = 900;
+const ELECTRONS_PER_CATION = 1;
+const CIRCUIT_WIRE_ELECTRONS_PER_CATION = 0.5;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getElectronFillColor(theme: 'light' | 'dark', state: Electron['state']) {
+  if (theme === 'dark') {
+    return state === 'wire' ? '#f8fafc' : '#ffffff';
+  }
+
+  return state === 'wire' ? '#16a34a' : '#22c55e';
+}
+
+function getElectronStrokeColor(theme: 'light' | 'dark', state: Electron['state']) {
+  if (theme === 'dark') {
+    return state === 'wire' ? 'rgba(226, 232, 240, 0.95)' : 'rgba(15, 23, 42, 0.9)';
+  }
+
+  return state === 'wire' ? 'rgba(22, 163, 74, 0.8)' : 'rgba(21, 128, 61, 0.85)';
+}
+
+function getElectronGlyphColor(theme: 'light' | 'dark') {
+  return theme === 'dark' ? '#0f172a' : '#f8fafc';
+}
+
+function getElectronTrailColor(theme: 'light' | 'dark') {
+  return theme === 'dark' ? 'rgba(255, 255, 255, 0.24)' : 'rgba(34, 197, 94, 0.24)';
+}
+
+function spawnMetalElectron(bounds: { x: number; y: number; w: number; h: number }, cations: Cation[]) {
+  if (cations.length === 0) {
+    return {
+      x: bounds.x + Math.random() * bounds.w,
+      y: bounds.y + Math.random() * bounds.h,
+    };
+  }
+
+  const cation = cations[Math.floor(Math.random() * cations.length)];
+  const angle = Math.random() * Math.PI * 2;
+  const radius = CATION_RADIUS * (0.4 + Math.random() * 0.9);
+
+  return {
+    x: clamp(cation.baseX + Math.cos(angle) * radius, bounds.x + 8, bounds.x + bounds.w - 8),
+    y: clamp(cation.baseY + Math.sin(angle) * radius, bounds.y + 8, bounds.y + bounds.h - 8),
+  };
+}
 
 function getWirePos(progress: number, exitY: number, entryY: number) {
   // More realistic circuit path with proper proportions
@@ -177,11 +225,16 @@ export default function MetalSimulation({
       }
 
       const electrons: Electron[] = [];
-      const numElectrons = mode === 'malleable' ? 60 : 150;
-      for (let i = 0; i < numElectrons; i++) {
+      const metalElectronCount = Math.max(
+        cations.length,
+        Math.round(cations.length * ELECTRONS_PER_CATION)
+      );
+
+      for (let i = 0; i < metalElectronCount; i++) {
+        const pos = spawnMetalElectron(bounds, cations);
         electrons.push({
-          x: bounds.x + Math.random() * bounds.w,
-          y: bounds.y + Math.random() * bounds.h,
+          x: pos.x,
+          y: pos.y,
           vx: (Math.random() - 0.5) * 4,
           vy: (Math.random() - 0.5) * 4,
           speedMultiplier: 1,
@@ -190,7 +243,8 @@ export default function MetalSimulation({
       }
       
       if (isCircuit) {
-        for (let i = 0; i < 60; i++) {
+        const wireElectronCount = Math.max(6, Math.round(cations.length * CIRCUIT_WIRE_ELECTRONS_PER_CATION));
+        for (let i = 0; i < wireElectronCount; i++) {
           const progress = Math.random() * WIRE_PATH_LENGTH;
           electrons.push({
             x: 0, y: 0, vx: 0, vy: 0, speedMultiplier: 1, 
@@ -676,7 +730,7 @@ export default function MetalSimulation({
               for (let j = 1; j < trail.length; j++) {
                 ctx.lineTo(trail[j].x, trail[j].y);
               }
-              ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+              ctx.strokeStyle = getElectronTrailColor(theme);
               ctx.lineWidth = 2;
               ctx.stroke();
             }
@@ -690,13 +744,15 @@ export default function MetalSimulation({
       // Draw electrons
       electrons.forEach((e, i) => {
         ctx.beginPath();
-        ctx.arc(e.x, e.y, ELECTRON_RADIUS, 0, Math.PI * 2);
-        // Use darker blue for light theme visibility
-        ctx.fillStyle = e.state === 'metal' ? '#60a5fa' : (isLight ? '#16a34a' : '#ffffff');
+        const electronRadius = e.state === 'wire' ? ELECTRON_RADIUS * 0.95 : ELECTRON_RADIUS;
+        ctx.arc(e.x, e.y, electronRadius, 0, Math.PI * 2);
+        ctx.fillStyle = getElectronFillColor(theme, e.state);
         ctx.fill();
+        ctx.strokeStyle = getElectronStrokeColor(theme, e.state);
+        ctx.lineWidth = e.state === 'wire' ? 1.5 : 1;
+        ctx.stroke();
         
-        // Use darker color for light theme visibility
-        ctx.fillStyle = e.state === 'metal' ? (isLight ? '#1e3a8a' : '#ffffff') : (isLight ? '#166534' : '#1e293b');
+        ctx.fillStyle = getElectronGlyphColor(theme);
         ctx.font = '10px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -845,8 +901,8 @@ export default function MetalSimulation({
     
     // Add new electron at click position
     electronsRef.current.push({
-      x: adjustedX,
-      y: adjustedY,
+      x: clamp(adjustedX, 8, CANVAS_WIDTH - 8),
+      y: clamp(adjustedY, 8, CANVAS_HEIGHT - 8),
       vx: (Math.random() - 0.5) * 2,
       vy: (Math.random() - 0.5) * 2,
       speedMultiplier: 1,
