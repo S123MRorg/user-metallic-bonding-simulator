@@ -1135,7 +1135,8 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Show Cation Electrons Toggle */}
+                {/* Show Cation Electrons Toggle - Only available in demonstrate mode */}
+                {demonstrateMode && (
                 <div className={`py-2 ${isDark ? 'border-t border-slate-700/50' : 'border-t border-slate-200'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1144,7 +1145,7 @@ export default function App() {
                       <div className="group relative">
                         <HelpCircle className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'} cursor-help`} />
                         <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 ${isDark ? 'bg-slate-700' : 'bg-white'} ${isDark ? 'text-slate-200' : 'text-slate-700'} text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'shadow-lg' : 'shadow-xl border border-slate-200'}`}>
-                          Show inner-shell electrons inside cations. Only visible in demonstrate mode. These are for illustration purposes only - in real metals, cations do not retain their electrons.
+                          Show inner-shell electrons inside cations. These are for illustration purposes only - in real metals, cations do not retain their electrons.
                         </div>
                       </div>
                     </div>
@@ -1162,6 +1163,7 @@ export default function App() {
                     </button>
                   </div>
                 </div>
+                )}
 
                 {/* Crystal Structure */}
                 <div className={`py-2 ${isDark ? 'border-t border-slate-700/50' : 'border-t border-slate-200'}`}>
